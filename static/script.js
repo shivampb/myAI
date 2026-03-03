@@ -1,6 +1,6 @@
 // Gemini API Config
 const GEMINI_API_KEY = "AIzaSyCPxrzZPzclqfHeztyPQVgtSAYsj9PncP0";
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_STREAM_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
 
 const SHIVA_SYSTEM_PROMPT = `Tu ek Indian AI assistant hai jiska naam hai Shiva. 
 Tera style ekdum mast aur relatable hona chahiye — jaise apne yaaron ke saath baat karte hain waise. 
@@ -40,43 +40,83 @@ chatForm.addEventListener("submit", async (e) => {
   isLoading = true;
   sendButton.disabled = true;
 
-  // Show loading
+  // Show loading dots
   const loadingElement = loadingTemplate.content.cloneNode(true);
   messagesContainer.appendChild(loadingElement);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
   try {
-    const response = await fetch(GEMINI_API_URL, {
+    const response = await fetch(GEMINI_STREAM_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         system_instruction: {
           parts: [{ text: SHIVA_SYSTEM_PROMPT }],
         },
-        contents: [
-          {
-            parts: [{ text: message }],
-          },
-        ],
+        contents: [{ parts: [{ text: message }] }],
       }),
     });
 
-    // Remove loading
+    // Remove loading dots
     const loadingGroup = messagesContainer.querySelector(".loading-group");
     if (loadingGroup) loadingGroup.remove();
 
-    if (response.ok) {
-      const data = await response.json();
-      const aiText =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "Yaar, kuch toh gadbad ho gayi 😅";
-      addAssistantMessage(aiText);
-    } else {
+    if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      addErrorMessage(
-        errorData?.error?.message || "API error. Please try again."
-      );
+      addErrorMessage(errorData?.error?.message || "API error. Try again.");
+      isLoading = false;
+      sendButton.disabled = false;
+      return;
     }
+
+    // Create empty assistant message bubble for streaming
+    const messageElement = assistantMessageTemplate.content.cloneNode(true);
+    const messageP = messageElement.querySelector(".message p");
+    messageP.textContent = "";
+    messagesContainer.appendChild(messageElement);
+
+    // Get the actual appended <p> element (template clone loses reference)
+    const allMessages = messagesContainer.querySelectorAll(".assistant-message p");
+    const streamTarget = allMessages[allMessages.length - 1];
+
+    // Read the SSE stream
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // Parse SSE events from buffer
+      const lines = buffer.split("\n");
+      buffer = lines.pop(); // keep incomplete line in buffer
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const jsonStr = line.slice(6).trim();
+        if (!jsonStr) continue;
+
+        try {
+          const data = JSON.parse(jsonStr);
+          const chunk = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (chunk) {
+            streamTarget.textContent += chunk;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }
+        } catch (parseErr) {
+          // Skip malformed chunks
+        }
+      }
+    }
+
+    // If nothing came through
+    if (!streamTarget.textContent) {
+      streamTarget.textContent = "Yaar, kuch toh gadbad ho gayi 😅";
+    }
+
   } catch (error) {
     console.error("Error:", error);
     const loadingGroup = messagesContainer.querySelector(".loading-group");
@@ -90,7 +130,7 @@ chatForm.addEventListener("submit", async (e) => {
   userInput.focus();
 });
 
-// Add user message to UI
+// Add user message
 function addUserMessage(message) {
   removeWelcomeMessage();
   const messageElement = messageBubbleTemplate.content.cloneNode(true);
@@ -98,14 +138,7 @@ function addUserMessage(message) {
   messagesContainer.appendChild(messageElement);
 }
 
-// Add assistant message to UI
-function addAssistantMessage(message) {
-  const messageElement = assistantMessageTemplate.content.cloneNode(true);
-  messageElement.querySelector(".message p").textContent = message;
-  messagesContainer.appendChild(messageElement);
-}
-
-// Add error message to UI
+// Add error message
 function addErrorMessage(message) {
   const messageElement = assistantMessageTemplate.content.cloneNode(true);
   const messageDiv = messageElement.querySelector(".message");
