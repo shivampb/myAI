@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shiva - Desi AI Bhai 💬</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="chat-container">
+      <!-- Header -->
+      <div class="chat-header">
+        <div class="header-content">
+          <div class="avatar">
+            <span>🤓</span>
+          </div>
+          <div class="header-info">
+            <h1>Shiva</h1>
+            <p>Desi AI Bhai 🔥</p>
+          </div>
+        </div>
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span class="status-text">Online</span>
+        </div>
+      </div>
+
+      <!-- Messages Area -->
+      <div class="messages-container" id="messagesContainer">
+        <div class="welcome-message">
+          <div class="welcome-icon">💬</div>
+          <h2>Yo! Main hoon Shiva 🤓</h2>
+          <p>Apna desi AI bhai, Hinglish swaag ke saath!</p>
+          <p class="welcome-subtext">
+            Kuch bhi pooch, kisi bhi topic pe - cinema, coding, life advice,
+            memes... sab kuch! 😎
+          </p>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-container">
+        <form id="chatForm" class="chat-input-form">
+          <input
+            type="text"
+            id="userInput"
+            class="chat-input"
+            placeholder="Shiva bhai se kuch poochho..."
+            autocomplete="off"
+          />
+          <button type="submit" class="send-button" id="sendButton">
+            <span class="send-icon">➤</span>
+          </button>
+        </form>
+        <div class="input-hint">
+          Press Enter to send • Ctrl+Enter for new line
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <template id="messageBubbleTemplate">
+      <div class="message-group">
+        <div class="message user-message">
+          <p></p>
+        </div>
+      </div>
+    </template>
+
+    <template id="assistantMessageTemplate">
+      <div class="message-group">
+        <div class="message assistant-message">
+          <p></p>
+        </div>
+      </div>
+    </template>
+
+    <template id="loadingTemplate">
+      <div class="message-group loading-group">
+        <div class="message assistant-message">
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>
