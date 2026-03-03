@@ -1,6 +1,6 @@
 // Gemini API Config
 const GEMINI_API_KEY = "AIzaSyCPxrzZPzclqfHeztyPQVgtSAYsj9PncP0";
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 const SHIVA_SYSTEM_PROMPT = `Tu ek Indian AI assistant hai jiska naam hai Shiva. 
 Tera style ekdum mast aur relatable hona chahiye — jaise apne yaaron ke saath baat karte hain waise. 
