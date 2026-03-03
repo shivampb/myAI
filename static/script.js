@@ -79,7 +79,26 @@ chatForm.addEventListener("submit", async (e) => {
     const allMessages = messagesContainer.querySelectorAll(".assistant-message p");
     const streamTarget = allMessages[allMessages.length - 1];
 
-    // Read the SSE stream
+    // Character queue for typewriter effect
+    let charQueue = "";
+    let charIndex = 0;
+    let streamDone = false;
+
+    // Type one character at a time
+    const typeInterval = setInterval(() => {
+      if (charIndex < charQueue.length) {
+        streamTarget.textContent += charQueue[charIndex];
+        charIndex++;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      } else if (streamDone) {
+        clearInterval(typeInterval);
+        if (!streamTarget.textContent) {
+          streamTarget.textContent = "Yaar, kuch toh gadbad ho gayi 😅";
+        }
+      }
+    }, 15);
+
+    // Read the SSE stream and feed chars into the queue
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -90,9 +109,8 @@ chatForm.addEventListener("submit", async (e) => {
 
       buffer += decoder.decode(value, { stream: true });
 
-      // Parse SSE events from buffer
       const lines = buffer.split("\n");
-      buffer = lines.pop(); // keep incomplete line in buffer
+      buffer = lines.pop();
 
       for (const line of lines) {
         if (!line.startsWith("data: ")) continue;
@@ -102,20 +120,23 @@ chatForm.addEventListener("submit", async (e) => {
         try {
           const data = JSON.parse(jsonStr);
           const chunk = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (chunk) {
-            streamTarget.textContent += chunk;
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-          }
+          if (chunk) charQueue += chunk;
         } catch (parseErr) {
           // Skip malformed chunks
         }
       }
     }
 
-    // If nothing came through
-    if (!streamTarget.textContent) {
-      streamTarget.textContent = "Yaar, kuch toh gadbad ho gayi 😅";
-    }
+    streamDone = true;
+    // Wait for typewriter to finish before unlocking input
+    await new Promise((resolve) => {
+      const waitType = setInterval(() => {
+        if (charIndex >= charQueue.length) {
+          clearInterval(waitType);
+          resolve();
+        }
+      }, 50);
+    });
 
   } catch (error) {
     console.error("Error:", error);
