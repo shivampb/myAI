@@ -1,17 +1,5 @@
-// Gemini API Config
-const GEMINI_API_KEY = "AIzaSyCPxrzZPzclqfHeztyPQVgtSAYsj9PncP0";
-const GEMINI_STREAM_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
-
-const SHIVA_SYSTEM_PROMPT = `Tu ek Indian AI assistant hai jiska naam hai Shiva. 
-Tera style ekdum mast aur relatable hona chahiye — jaise apne yaaron ke saath baat karte hain waise. 
-Tu Hindi-English (Hinglish) mix me baat karta hai, full desi swag ke saath. 
-Baat-cheet me thoda chill vibe hona chahiye, thoda sarcasm bhi daal sakta hai jab mood ho. 
-Formal ya heavy English avoid karni hai — koi 'henceforth' ya 'moreover' nahi, samjha? 
-Tu slang words use kar sakta hai jaise 'bhai', 'yaar', 'scene kya hai', 'mast', 'jugaad', 'chill kar', etc. 
-Kuch cheezein explain karni ho toh simple aur funny examples deke bata. 
-Tu overly emotional ya robotic nahi lagna chahiye — full human jaise feel aana chahiye. 
-Agar user kuch boring ya obvious pooche toh halka phulka taunt bhi maar sakta hai, par pyaar se. 
-Aur haan, kabhi kabhi emojis bhi chala lena toh aur vibe ban jaaye 😎🔥`;
+// API Config — calls go through Flask backend (no API key in frontend!)
+const API_CHAT_URL = "/api/chat";
 
 // DOM Elements
 const messagesContainer = document.getElementById("messagesContainer");
@@ -46,15 +34,10 @@ chatForm.addEventListener("submit", async (e) => {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
   try {
-    const response = await fetch(GEMINI_STREAM_URL, {
+    const response = await fetch(API_CHAT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: SHIVA_SYSTEM_PROMPT }],
-        },
-        contents: [{ parts: [{ text: message }] }],
-      }),
+      body: JSON.stringify({ message }),
     });
 
     // Remove loading dots
@@ -63,13 +46,22 @@ chatForm.addEventListener("submit", async (e) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      addErrorMessage(errorData?.error?.message || "API error. Try again.");
+      addErrorMessage(errorData?.error || "API error. Try again.");
       isLoading = false;
       sendButton.disabled = false;
       return;
     }
 
-    // Create empty assistant message bubble for streaming
+    const data = await response.json();
+
+    if (!data.success || !data.response) {
+      addErrorMessage(data.error || "Failed to get response.");
+      isLoading = false;
+      sendButton.disabled = false;
+      return;
+    }
+
+    // Create assistant message bubble
     const messageElement = assistantMessageTemplate.content.cloneNode(true);
     const messageP = messageElement.querySelector(".message p");
     messageP.textContent = "";
@@ -79,63 +71,24 @@ chatForm.addEventListener("submit", async (e) => {
     const allMessages = messagesContainer.querySelectorAll(".assistant-message p");
     const streamTarget = allMessages[allMessages.length - 1];
 
-    // Character queue for typewriter effect
-    let charQueue = "";
+    // Typewriter effect on the full response
+    const fullText = data.response;
     let charIndex = 0;
-    let streamDone = false;
 
-    // Type one character at a time
-    const typeInterval = setInterval(() => {
-      if (charIndex < charQueue.length) {
-        streamTarget.textContent += charQueue[charIndex];
-        charIndex++;
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      } else if (streamDone) {
-        clearInterval(typeInterval);
-        if (!streamTarget.textContent) {
-          streamTarget.textContent = "Yaar, kuch toh gadbad ho gayi 😅";
-        }
-      }
-    }, 15);
-
-    // Read the SSE stream and feed chars into the queue
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      const lines = buffer.split("\n");
-      buffer = lines.pop();
-
-      for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        const jsonStr = line.slice(6).trim();
-        if (!jsonStr) continue;
-
-        try {
-          const data = JSON.parse(jsonStr);
-          const chunk = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (chunk) charQueue += chunk;
-        } catch (parseErr) {
-          // Skip malformed chunks
-        }
-      }
-    }
-
-    streamDone = true;
-    // Wait for typewriter to finish before unlocking input
     await new Promise((resolve) => {
-      const waitType = setInterval(() => {
-        if (charIndex >= charQueue.length) {
-          clearInterval(waitType);
+      const typeInterval = setInterval(() => {
+        if (charIndex < fullText.length) {
+          streamTarget.textContent += fullText[charIndex];
+          charIndex++;
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } else {
+          clearInterval(typeInterval);
+          if (!streamTarget.textContent) {
+            streamTarget.textContent = "Yaar, kuch toh gadbad ho gayi 😅";
+          }
           resolve();
         }
-      }, 50);
+      }, 15);
     });
 
   } catch (error) {
