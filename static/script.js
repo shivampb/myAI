@@ -1,250 +1,257 @@
-// API Config — calls go through Flask backend (no API key in frontend!)
+// ── API ──
 const API_CHAT_URL = "/api/chat";
-
-// DOM Elements
-const messagesContainer = document.getElementById("messagesContainer");
-const chatForm = document.getElementById("chatForm");
-const userInput = document.getElementById("userInput");
-const sendButton = document.getElementById("sendButton");
-const messageBubbleTemplate = document.getElementById("messageBubbleTemplate");
-const assistantMessageTemplate = document.getElementById("assistantMessageTemplate");
-const loadingTemplate = document.getElementById("loadingTemplate");
-
 let isLoading = false;
-let currentUtterance = null; // Track currently playing TTS
+let currentUtterance = null;
 
-// Initialize
 document.addEventListener("DOMContentLoaded", () => {
+  const messagesContainer = document.getElementById("messagesContainer");
+  const chatForm = document.getElementById("chatForm");
+  const userInput = document.getElementById("userInput");
+  const sendButton = document.getElementById("sendButton");
+  const newChatBtn = document.getElementById("newChatBtn");
+  const menuBtn = document.getElementById("menuBtn");
+  const sidebar = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebarOverlay");
+  const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
+
+  const userBubbleTemplate = document.getElementById("userBubbleTemplate");
+  const aiBubbleTemplate = document.getElementById("aiBubbleTemplate");
+  const loadingTemplate = document.getElementById("loadingTemplate");
+
+  // Configure marked
+  if (typeof marked !== "undefined") {
+    marked.setOptions({ breaks: true, gfm: true, headerIds: false });
+  }
+
   if (userInput) userInput.focus();
-});
 
-// Form submission
-chatForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const message = userInput.value.trim();
-  if (!message || isLoading) return;
+  // ────── SIDEBAR ──────
+  function openSidebar() {
+    sidebar.classList.add("open");
+    sidebarOverlay.classList.add("open");
+  }
+  function closeSidebar() {
+    sidebar.classList.remove("open");
+    sidebarOverlay.classList.remove("open");
+  }
 
-  addUserMessage(message);
-  userInput.value = "";
-  isLoading = true;
-  sendButton.disabled = true;
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openSidebar();
+  });
+  sidebarCloseBtn.addEventListener("click", closeSidebar);
+  sidebarOverlay.addEventListener("click", closeSidebar);
 
-  // Show loading dots
-  const loadingElement = loadingTemplate.content.cloneNode(true);
-  messagesContainer.appendChild(loadingElement);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  // ────── NEW CHAT ──────
+  newChatBtn.addEventListener("click", () => {
+    messagesContainer.querySelectorAll(".msg-row").forEach(r => r.remove());
+    const ws = document.getElementById("welcomeScreen");
+    if (ws) ws.style.display = "";
+    window.speechSynthesis?.cancel();
+    currentUtterance = null;
+    userInput.value = "";
+    userInput.style.height = "auto";
+    closeSidebar();
+  });
 
-  try {
-    const response = await fetch(API_CHAT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
+  // ────── SUGGESTION CARDS ──────
+  document.body.querySelectorAll(".suggestion-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const prompt = card.dataset.prompt;
+      if (prompt) {
+        userInput.value = prompt;
+        autoResize();
+        userInput.focus();
+        chatForm.dispatchEvent(new Event("submit"));
+      }
     });
+  });
 
-    // Remove loading dots
-    const loadingGroup = messagesContainer.querySelector(".loading-group");
-    if (loadingGroup) loadingGroup.remove();
+  // ────── TEXTAREA ──────
+  function autoResize() {
+    userInput.style.height = "auto";
+    userInput.style.height = Math.min(userInput.scrollHeight, 180) + "px";
+  }
+  userInput.addEventListener("input", autoResize);
+  userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      chatForm.dispatchEvent(new Event("submit"));
+    }
+  });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      addErrorMessage(errorData?.error || "API error. Try again.");
+  // ────── SUBMIT ──────
+  chatForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const message = userInput.value.trim();
+    if (!message || isLoading) return;
+
+    const ws = document.getElementById("welcomeScreen");
+    if (ws) ws.style.display = "none";
+
+    addUserMessage(message);
+    userInput.value = "";
+    userInput.style.height = "auto";
+    isLoading = true;
+    sendButton.disabled = true;
+
+    messagesContainer.appendChild(loadingTemplate.content.cloneNode(true));
+    scrollToBottom();
+
+    try {
+      const res = await fetch(API_CHAT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      removeLoading();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        addAiError(err?.error || "API error.");
+        return;
+      }
+      const data = await res.json();
+      if (!data.success || !data.response) {
+        addAiError(data.error || "Failed.");
+        return;
+      }
+      await addAiMessage(data.response);
+    } catch (err) {
+      console.error(err);
+      removeLoading();
+      addAiError("Connection error.");
+    } finally {
       isLoading = false;
       sendButton.disabled = false;
-      return;
+      userInput.focus();
+      scrollToBottom();
     }
+  });
 
-    const data = await response.json();
+  // ────── HELPERS ──────
+  function addUserMessage(text) {
+    const el = userBubbleTemplate.content.cloneNode(true);
+    el.querySelector("p").textContent = text;
+    messagesContainer.appendChild(el);
+    scrollToBottom();
+  }
 
-    if (!data.success || !data.response) {
-      addErrorMessage(data.error || "Failed to get response.");
-      isLoading = false;
-      sendButton.disabled = false;
-      return;
-    }
+  function renderMarkdown(text) {
+    if (typeof marked !== "undefined") return marked.parse(text);
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+  }
 
-    // Create assistant message bubble
-    const messageElement = assistantMessageTemplate.content.cloneNode(true);
-    const messageP = messageElement.querySelector(".message p");
-    messageP.textContent = "";
-    messagesContainer.appendChild(messageElement);
+  async function addAiMessage(fullText) {
+    const el = aiBubbleTemplate.content.cloneNode(true);
+    messagesContainer.appendChild(el);
+    const rows = messagesContainer.querySelectorAll(".msg-row--ai");
+    const lastRow = rows[rows.length - 1];
+    const textEl = lastRow.querySelector(".ai-text");
+    const actionsEl = lastRow.querySelector(".msg-actions");
+    const ttsBtn = lastRow.querySelector(".tts-btn");
+    const copyBtn = lastRow.querySelector(".copy-btn");
 
-    // Get the actual appended <p> element (template clone loses reference)
-    const allMessages = messagesContainer.querySelectorAll(".assistant-message p");
-    const streamTarget = allMessages[allMessages.length - 1];
-
-    // Get the TTS button for this message
-    const allTtsBtns = messagesContainer.querySelectorAll(".tts-btn");
-    const ttsBtn = allTtsBtns[allTtsBtns.length - 1];
-    ttsBtn.disabled = true; // Disable until typewriter finishes
-
-    // Typewriter effect on the full response
-    const fullText = data.response;
-    let charIndex = 0;
-
+    // Typewriter on raw text
+    let i = 0;
     await new Promise((resolve) => {
-      const typeInterval = setInterval(() => {
-        if (charIndex < fullText.length) {
-          streamTarget.textContent += fullText[charIndex];
-          charIndex++;
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      const timer = setInterval(() => {
+        if (i < fullText.length) {
+          textEl.textContent += fullText[i++];
+          scrollToBottom();
         } else {
-          clearInterval(typeInterval);
-          if (!streamTarget.textContent) {
-            streamTarget.textContent = "Hmm, something went wrong. Try again!";
-          }
-          // Enable TTS button now that text is complete
-          ttsBtn.disabled = false;
-          attachTtsButton(ttsBtn, streamTarget.textContent);
+          clearInterval(timer);
+          // Render rich markdown
+          textEl.innerHTML = renderMarkdown(fullText);
+          actionsEl.classList.remove("hidden");
+          attachTtsButton(ttsBtn, fullText);
+          attachCopyButton(copyBtn, fullText);
+          scrollToBottom();
           resolve();
         }
-      }, 15);
+      }, 12);
     });
-
-  } catch (error) {
-    console.error("Error:", error);
-    const loadingGroup = messagesContainer.querySelector(".loading-group");
-    if (loadingGroup) loadingGroup.remove();
-    addErrorMessage("Connection error. Check your network and try again.");
   }
 
-  isLoading = false;
-  sendButton.disabled = false;
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  userInput.focus();
-});
-
-// Add user message
-function addUserMessage(message) {
-  removeWelcomeMessage();
-  const messageElement = messageBubbleTemplate.content.cloneNode(true);
-  messageElement.querySelector(".message p").textContent = message;
-  messagesContainer.appendChild(messageElement);
-}
-
-// Add error message
-function addErrorMessage(message) {
-  const messageElement = assistantMessageTemplate.content.cloneNode(true);
-  const messageDiv = messageElement.querySelector(".message");
-  messageDiv.querySelector("p").textContent = `❌ Error: ${message}`;
-  messageDiv.classList.add("error-message");
-  messagesContainer.appendChild(messageElement);
-}
-
-// Handle Enter key
-userInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
-    e.preventDefault();
-    chatForm.dispatchEvent(new Event("submit"));
+  function addAiError(msg) {
+    const el = aiBubbleTemplate.content.cloneNode(true);
+    el.querySelector(".ai-text").textContent = "❌ " + msg;
+    el.querySelector(".ai-text").classList.add("error-text");
+    el.querySelector(".msg-actions").style.display = "none";
+    messagesContainer.appendChild(el);
+    scrollToBottom();
   }
-});
 
-// Auto-scroll
-const observer = new MutationObserver(() => {
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-});
-observer.observe(messagesContainer, { childList: true, subtree: true });
-
-// Remove welcome message
-function removeWelcomeMessage() {
-  const welcomeMsg = messagesContainer.querySelector(".welcome-message");
-  if (welcomeMsg) {
-    welcomeMsg.style.animation = "fadeOut 0.3s ease-out forwards";
-    setTimeout(() => welcomeMsg.remove(), 300);
+  function removeLoading() {
+    const el = messagesContainer.querySelector("#loadingRow");
+    if (el) el.closest(".msg-row")?.remove();
   }
-}
 
-// TTS — attach play/stop behavior to a speaker button
-function attachTtsButton(btn, text) {
-  const iconPlay = btn.querySelector(".tts-icon-play");
-  const iconStop = btn.querySelector(".tts-icon-stop");
-  const label = btn.querySelector(".tts-label");
+  function scrollToBottom() {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
 
-  // Pick the best available Indian voice: Gujarati → Hindi → Indian English → default
+  // ────── COPY ──────
+  function attachCopyButton(btn, text) {
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+        const label = btn.querySelector("span");
+        label.textContent = "Copied!";
+        btn.classList.add("copied");
+        setTimeout(() => { label.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+      } catch { }
+    });
+  }
+
+  // ────── TTS ──────
   function getIndianVoice() {
     return new Promise((resolve) => {
       const pick = () => {
         const voices = window.speechSynthesis.getVoices();
         if (!voices.length) return null;
-        const priority = ["gu-IN", "gu", "hi-IN", "hi", "en-IN"];
-        for (const lang of priority) {
-          const match = voices.find(
-            (v) => v.lang === lang || v.lang.startsWith(lang)
-          );
-          if (match) return match;
+        for (const lang of ["gu-IN", "gu", "hi-IN", "hi", "en-IN"]) {
+          const m = voices.find(v => v.lang === lang || v.lang.startsWith(lang));
+          if (m) return m;
         }
-        return null; // let browser pick default
+        return null;
       };
-
-      const voice = pick();
-      if (voice !== null || window.speechSynthesis.getVoices().length > 0) {
-        resolve(voice);
-      } else {
-        // Voices not loaded yet — wait for the event (mainly Chrome)
-        window.speechSynthesis.onvoiceschanged = () => {
-          resolve(pick());
-        };
-      }
+      const v = pick();
+      if (v !== null || window.speechSynthesis.getVoices().length > 0) resolve(v);
+      else window.speechSynthesis.onvoiceschanged = () => resolve(pick());
     });
   }
 
-  async function startSpeaking() {
-    // Stop any currently playing utterance
-    if (currentUtterance) {
-      window.speechSynthesis.cancel();
+  function attachTtsButton(btn, text) {
+    const iconPlay = btn.querySelector(".tts-icon-play");
+    const iconStop = btn.querySelector(".tts-icon-stop");
+    const label = btn.querySelector(".tts-label");
+
+    const reset = () => {
+      currentUtterance = null;
+      iconPlay.style.display = "inline"; iconStop.style.display = "none";
+      label.textContent = "Listen"; btn.classList.remove("tts-playing");
+    };
+
+    async function start() {
+      if (currentUtterance) window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      const voice = await getIndianVoice();
+      if (voice) { u.voice = voice; u.lang = voice.lang; } else { u.lang = "en-IN"; }
+      u.rate = 1; u.pitch = 1;
+      u.onstart = () => {
+        currentUtterance = u;
+        iconPlay.style.display = "none"; iconStop.style.display = "inline";
+        label.textContent = "Stop"; btn.classList.add("tts-playing");
+      };
+      u.onend = reset; u.onerror = reset;
+      window.speechSynthesis.speak(u);
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voice = await getIndianVoice();
-    if (voice) {
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-    } else {
-      utterance.lang = "en-IN"; // safe fallback
-    }
-    utterance.rate = 1;
-    utterance.pitch = 1;
-
-    utterance.onstart = () => {
-      currentUtterance = utterance;
-      iconPlay.style.display = "none";
-      iconStop.style.display = "inline";
-      label.textContent = "Stop";
-      btn.classList.add("tts-playing");
-    };
-
-    utterance.onend = () => {
-      currentUtterance = null;
-      iconPlay.style.display = "inline";
-      iconStop.style.display = "none";
-      label.textContent = "Listen";
-      btn.classList.remove("tts-playing");
-    };
-
-    utterance.onerror = () => {
-      currentUtterance = null;
-      iconPlay.style.display = "inline";
-      iconStop.style.display = "none";
-      label.textContent = "Listen";
-      btn.classList.remove("tts-playing");
-    };
-
-    window.speechSynthesis.speak(utterance);
+    btn.addEventListener("click", () => {
+      if (window.speechSynthesis.speaking && btn.classList.contains("tts-playing")) {
+        window.speechSynthesis.cancel(); reset();
+      } else { start(); }
+    });
   }
 
-  function stopSpeaking() {
-    window.speechSynthesis.cancel();
-    currentUtterance = null;
-    iconPlay.style.display = "inline";
-    iconStop.style.display = "none";
-    label.textContent = "Listen";
-    btn.classList.remove("tts-playing");
-  }
-
-  btn.addEventListener("click", () => {
-    if (window.speechSynthesis.speaking && btn.classList.contains("tts-playing")) {
-      stopSpeaking();
-    } else {
-      startSpeaking();
-    }
-  });
-}
+}); // end DOMContentLoaded

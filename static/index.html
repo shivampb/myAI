@@ -4,82 +4,131 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shiva - Research | Study 💬</title>
+  <title>Shiva — Research &amp; Study AI</title>
+  <meta name="description" content="Shiva — your Gujlish AI buddy for research, study, and everyday doubts." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-  <div class="chat-container">
-    <!-- Header -->
-    <div class="chat-header">
-      <div class="header-content">
-        <div class="avatar">
-          <span>🤓</span>
+
+  <div class="app-wrapper">
+    <!-- Top bar -->
+    <header class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Open sidebar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <span class="topbar-title">Shiva</span>
+      <button class="new-chat-btn" id="newChatBtn" title="New chat">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- Messages -->
+    <div class="messages-area" id="messagesContainer">
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-logo">🤓</div>
+        <h1 class="welcome-title">Kem chho, yaar?</h1>
+        <p class="welcome-subtitle">Kuch bhi pooch — research, study, ya general doubts 😊</p>
+        <div class="suggestion-grid">
+          <button class="suggestion-card" data-prompt="What is machine learning and how does it work?">
+            <span class="card-icon">🧠</span><span class="card-text">Machine Learning explain kar</span>
+          </button>
+          <button class="suggestion-card" data-prompt="Explain the difference between RAM and ROM simply.">
+            <span class="card-icon">💻</span><span class="card-text">RAM vs ROM — samjhav bhai</span>
+          </button>
+          <button class="suggestion-card" data-prompt="What are the best study techniques for students?">
+            <span class="card-icon">📚</span><span class="card-text">Best study techniques?</span>
+          </button>
+          <button class="suggestion-card" data-prompt="How does the internet work in simple terms?">
+            <span class="card-icon">🌐</span><span class="card-text">Internet kevi rite kaam kare chhe?</span>
+          </button>
         </div>
-        <div class="header-info">
-          <h1>Shiva</h1>
-          <p>Research | Study | Explore 🔥</p>
-        </div>
-      </div>
-      <div class="status-indicator">
-        <span class="status-dot"></span>
-        <span class="status-text">Online</span>
       </div>
     </div>
 
-    <!-- Messages Area -->
-    <div class="messages-container" id="messagesContainer">
-      <div class="welcome-message">
-        <div class="welcome-icon">💬</div>
-        <h2>Yo! Dosto 🤓</h2>
-        <p>desi AI, gujlish swaag ke saath!</p>
-        <p class="welcome-subtext">
-          Kuch bhi pooch, kisi bhi topic pe - cinema, coding, life advice,
-          memes... sab kuch! 😎
-        </p>
-      </div>
-    </div>
-
-    <!-- Input Area -->
-    <div class="input-container">
-      <form id="chatForm" class="chat-input-form">
-        <input type="text" id="userInput" class="chat-input" placeholder="Shiva bhai se kuch poochho..."
-          autocomplete="off" />
-        <button type="submit" class="send-button" id="sendButton">
-          <span class="send-icon">➤</span>
-        </button>
-      </form>
-      <div class="input-hint">
-        Press Enter to send • Ctrl+Enter for new line
+    <!-- Input bar -->
+    <div class="input-bar">
+      <div class="input-wrapper">
+        <form id="chatForm" class="input-form">
+          <textarea id="userInput" class="chat-input" placeholder="Shiva ne kuch poochho..." autocomplete="off"
+            rows="1"></textarea>
+          <button type="submit" class="send-btn" id="sendButton" aria-label="Send">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+            </svg>
+          </button>
+        </form>
+        <p class="input-hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</p>
       </div>
     </div>
   </div>
 
-  <!-- Loading Indicator -->
-  <template id="messageBubbleTemplate">
-    <div class="message-group">
-      <div class="message user-message">
+  <!-- Sidebar (injected by JS) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-title">💬 Chats</span>
+      <button class="sidebar-close" id="sidebarClose">✕</button>
+    </div>
+    <div class="sidebar-tabs" id="sidebarTabs">
+      <!-- JS will populate chat tabs here -->
+    </div>
+    <div class="sidebar-footer">
+      <button class="sidebar-new-chat" id="sidebarNewChat">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        <span>New Chat</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <template id="userBubbleTemplate">
+    <div class="msg-row msg-row--user">
+      <div class="msg-bubble msg-bubble--user">
         <p></p>
       </div>
     </div>
   </template>
 
-  <template id="assistantMessageTemplate">
-    <div class="message-group">
-      <div class="message assistant-message">
-        <p></p>
-        <div class="message-actions">
-          <button class="tts-btn" title="Listen to response" aria-label="Read aloud">
+  <template id="aiBubbleTemplate">
+    <div class="msg-row msg-row--ai">
+      <div class="ai-avatar">🤓</div>
+      <div class="msg-content">
+        <div class="ai-text"></div>
+        <div class="msg-actions hidden">
+          <button class="action-btn tts-btn" title="Listen">
             <svg class="tts-icon-play" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-              width="15" height="15">
+              width="14" height="14">
               <path
                 d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
             </svg>
             <svg class="tts-icon-stop" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-              width="15" height="15" style="display:none">
+              width="14" height="14" style="display:none">
               <path d="M6 6h12v12H6z" />
             </svg>
             <span class="tts-label">Listen</span>
+          </button>
+          <button class="action-btn copy-btn" title="Copy">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" width="14" height="14">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+            <span>Copy</span>
           </button>
         </div>
       </div>
@@ -87,17 +136,15 @@
   </template>
 
   <template id="loadingTemplate">
-    <div class="message-group loading-group">
-      <div class="message assistant-message">
-        <div class="typing-indicator">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
+    <div class="msg-row msg-row--ai" id="loadingRow">
+      <div class="ai-avatar">🤓</div>
+      <div class="msg-content">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
       </div>
     </div>
   </template>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="script.js"></script>
 </body>
 
