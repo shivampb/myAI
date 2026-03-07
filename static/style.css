@@ -532,3 +532,52 @@ body {
   border-left: 3px solid var(--primary-color);
   color: var(--primary-color);
 }
+
+/* TTS Speaker Button */
+.message-actions {
+  margin-top: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tts-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.3rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  user-select: none;
+  outline: none;
+}
+
+.tts-btn:hover:not(:disabled) {
+  background: rgba(255, 107, 107, 0.12);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(255, 107, 107, 0.2);
+}
+
+.tts-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.tts-btn.tts-playing {
+  background: rgba(255, 107, 107, 0.18);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  animation: tts-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes tts-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.3); }
+  50%       { box-shadow: 0 0 0 5px rgba(255, 107, 107, 0); }
+}

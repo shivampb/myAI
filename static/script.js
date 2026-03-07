@@ -11,6 +11,7 @@ const assistantMessageTemplate = document.getElementById("assistantMessageTempla
 const loadingTemplate = document.getElementById("loadingTemplate");
 
 let isLoading = false;
+let currentUtterance = null; // Track currently playing TTS
 
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
@@ -71,6 +72,11 @@ chatForm.addEventListener("submit", async (e) => {
     const allMessages = messagesContainer.querySelectorAll(".assistant-message p");
     const streamTarget = allMessages[allMessages.length - 1];
 
+    // Get the TTS button for this message
+    const allTtsBtns = messagesContainer.querySelectorAll(".tts-btn");
+    const ttsBtn = allTtsBtns[allTtsBtns.length - 1];
+    ttsBtn.disabled = true; // Disable until typewriter finishes
+
     // Typewriter effect on the full response
     const fullText = data.response;
     let charIndex = 0;
@@ -84,8 +90,11 @@ chatForm.addEventListener("submit", async (e) => {
         } else {
           clearInterval(typeInterval);
           if (!streamTarget.textContent) {
-            streamTarget.textContent = "Yaar, kuch toh gadbad ho gayi 😅";
+            streamTarget.textContent = "Hmm, something went wrong. Try again!";
           }
+          // Enable TTS button now that text is complete
+          ttsBtn.disabled = false;
+          attachTtsButton(ttsBtn, streamTarget.textContent);
           resolve();
         }
       }, 15);
@@ -142,4 +151,100 @@ function removeWelcomeMessage() {
     welcomeMsg.style.animation = "fadeOut 0.3s ease-out forwards";
     setTimeout(() => welcomeMsg.remove(), 300);
   }
+}
+
+// TTS — attach play/stop behavior to a speaker button
+function attachTtsButton(btn, text) {
+  const iconPlay = btn.querySelector(".tts-icon-play");
+  const iconStop = btn.querySelector(".tts-icon-stop");
+  const label = btn.querySelector(".tts-label");
+
+  // Pick the best available Indian voice: Gujarati → Hindi → Indian English → default
+  function getIndianVoice() {
+    return new Promise((resolve) => {
+      const pick = () => {
+        const voices = window.speechSynthesis.getVoices();
+        if (!voices.length) return null;
+        const priority = ["gu-IN", "gu", "hi-IN", "hi", "en-IN"];
+        for (const lang of priority) {
+          const match = voices.find(
+            (v) => v.lang === lang || v.lang.startsWith(lang)
+          );
+          if (match) return match;
+        }
+        return null; // let browser pick default
+      };
+
+      const voice = pick();
+      if (voice !== null || window.speechSynthesis.getVoices().length > 0) {
+        resolve(voice);
+      } else {
+        // Voices not loaded yet — wait for the event (mainly Chrome)
+        window.speechSynthesis.onvoiceschanged = () => {
+          resolve(pick());
+        };
+      }
+    });
+  }
+
+  async function startSpeaking() {
+    // Stop any currently playing utterance
+    if (currentUtterance) {
+      window.speechSynthesis.cancel();
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voice = await getIndianVoice();
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = "en-IN"; // safe fallback
+    }
+    utterance.rate = 1;
+    utterance.pitch = 1;
+
+    utterance.onstart = () => {
+      currentUtterance = utterance;
+      iconPlay.style.display = "none";
+      iconStop.style.display = "inline";
+      label.textContent = "Stop";
+      btn.classList.add("tts-playing");
+    };
+
+    utterance.onend = () => {
+      currentUtterance = null;
+      iconPlay.style.display = "inline";
+      iconStop.style.display = "none";
+      label.textContent = "Listen";
+      btn.classList.remove("tts-playing");
+    };
+
+    utterance.onerror = () => {
+      currentUtterance = null;
+      iconPlay.style.display = "inline";
+      iconStop.style.display = "none";
+      label.textContent = "Listen";
+      btn.classList.remove("tts-playing");
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function stopSpeaking() {
+    window.speechSynthesis.cancel();
+    currentUtterance = null;
+    iconPlay.style.display = "inline";
+    iconStop.style.display = "none";
+    label.textContent = "Listen";
+    btn.classList.remove("tts-playing");
+  }
+
+  btn.addEventListener("click", () => {
+    if (window.speechSynthesis.speaking && btn.classList.contains("tts-playing")) {
+      stopSpeaking();
+    } else {
+      startSpeaking();
+    }
+  });
 }

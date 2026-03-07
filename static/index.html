@@ -1,92 +1,104 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shiva - Desi AI Bhai 💬</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="chat-container">
-      <!-- Header -->
-      <div class="chat-header">
-        <div class="header-content">
-          <div class="avatar">
-            <span>🤓</span>
-          </div>
-          <div class="header-info">
-            <h1>Shiva</h1>
-            <p>Desi AI Bhai 🔥</p>
-          </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shiva - Research | Study 💬</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="chat-container">
+    <!-- Header -->
+    <div class="chat-header">
+      <div class="header-content">
+        <div class="avatar">
+          <span>🤓</span>
         </div>
-        <div class="status-indicator">
-          <span class="status-dot"></span>
-          <span class="status-text">Online</span>
+        <div class="header-info">
+          <h1>Shiva</h1>
+          <p>Research | Study | Explore 🔥</p>
         </div>
       </div>
-
-      <!-- Messages Area -->
-      <div class="messages-container" id="messagesContainer">
-        <div class="welcome-message">
-          <div class="welcome-icon">💬</div>
-          <h2>Yo! Main hoon Shiva 🤓</h2>
-          <p>Apna desi AI bhai, Hinglish swaag ke saath!</p>
-          <p class="welcome-subtext">
-            Kuch bhi pooch, kisi bhi topic pe - cinema, coding, life advice,
-            memes... sab kuch! 😎
-          </p>
-        </div>
-      </div>
-
-      <!-- Input Area -->
-      <div class="input-container">
-        <form id="chatForm" class="chat-input-form">
-          <input
-            type="text"
-            id="userInput"
-            class="chat-input"
-            placeholder="Shiva bhai se kuch poochho..."
-            autocomplete="off"
-          />
-          <button type="submit" class="send-button" id="sendButton">
-            <span class="send-icon">➤</span>
-          </button>
-        </form>
-        <div class="input-hint">
-          Press Enter to send • Ctrl+Enter for new line
-        </div>
+      <div class="status-indicator">
+        <span class="status-dot"></span>
+        <span class="status-text">Online</span>
       </div>
     </div>
 
-    <!-- Loading Indicator -->
-    <template id="messageBubbleTemplate">
-      <div class="message-group">
-        <div class="message user-message">
-          <p></p>
+    <!-- Messages Area -->
+    <div class="messages-container" id="messagesContainer">
+      <div class="welcome-message">
+        <div class="welcome-icon">💬</div>
+        <h2>Yo! Dosto 🤓</h2>
+        <p>desi AI, gujlish swaag ke saath!</p>
+        <p class="welcome-subtext">
+          Kuch bhi pooch, kisi bhi topic pe - cinema, coding, life advice,
+          memes... sab kuch! 😎
+        </p>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-container">
+      <form id="chatForm" class="chat-input-form">
+        <input type="text" id="userInput" class="chat-input" placeholder="Shiva bhai se kuch poochho..."
+          autocomplete="off" />
+        <button type="submit" class="send-button" id="sendButton">
+          <span class="send-icon">➤</span>
+        </button>
+      </form>
+      <div class="input-hint">
+        Press Enter to send • Ctrl+Enter for new line
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <template id="messageBubbleTemplate">
+    <div class="message-group">
+      <div class="message user-message">
+        <p></p>
+      </div>
+    </div>
+  </template>
+
+  <template id="assistantMessageTemplate">
+    <div class="message-group">
+      <div class="message assistant-message">
+        <p></p>
+        <div class="message-actions">
+          <button class="tts-btn" title="Listen to response" aria-label="Read aloud">
+            <svg class="tts-icon-play" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+              width="15" height="15">
+              <path
+                d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+            </svg>
+            <svg class="tts-icon-stop" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+              width="15" height="15" style="display:none">
+              <path d="M6 6h12v12H6z" />
+            </svg>
+            <span class="tts-label">Listen</span>
+          </button>
         </div>
       </div>
-    </template>
+    </div>
+  </template>
 
-    <template id="assistantMessageTemplate">
-      <div class="message-group">
-        <div class="message assistant-message">
-          <p></p>
+  <template id="loadingTemplate">
+    <div class="message-group loading-group">
+      <div class="message assistant-message">
+        <div class="typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
       </div>
-    </template>
+    </div>
+  </template>
 
-    <template id="loadingTemplate">
-      <div class="message-group loading-group">
-        <div class="message assistant-message">
-          <div class="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-      </div>
-    </template>
+  <script src="script.js"></script>
+</body>
 
-    <script src="script.js"></script>
-  </body>
 </html>
