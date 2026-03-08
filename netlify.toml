@@ -1,5 +1,4 @@
 [build]
-  base = "genz_ai"
   publish = "static"
   functions = "netlify/functions"
 
