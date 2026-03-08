@@ -8,6 +8,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/welcome"
+  to = "/.netlify/functions/welcome"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
