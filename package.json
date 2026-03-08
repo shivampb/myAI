@@ -4,7 +4,7 @@
     "description": "Desi AI Study Buddy",
     "main": "app.py",
     "dependencies": {
-        "@google/generativeai": "^0.21.0"
+        "@google/generative-ai": "^0.21.0"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"

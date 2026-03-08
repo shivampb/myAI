@@ -14,17 +14,17 @@ CORS(app)
 # Configure Gemini API
 gemini_api = os.getenv("GEMINI_API_KEY")
 if gemini_api:
-    aapka_ai.configure(api_key=gemini_api)
+    genai.configure(api_key=gemini_api)
 else:
     raise ValueError("GEMINI_API_KEY environment variable not set")
 
 # Initialize model with generation config for concise responses
-generation_config = aapka_ai.types.GenerationConfig(
+generation_config = genai.types.GenerationConfig(
     max_output_tokens=2000,
     temperature=0.7,
 )
-model = aapka_ai.GenerativeModel(
-    "models/gemini-2.5-flash",
+model = genai.GenerativeModel(
+    "gemini-2.5-flash",
     generation_config=generation_config,
 )
 

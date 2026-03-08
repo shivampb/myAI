@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require("@google/generativeai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const STATE_LANG_MAP = {
     "Andhra Pradesh": { lang: "Telugu", script: "Telugu (తెలుగు)" },
