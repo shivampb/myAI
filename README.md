@@ -1,4 +1,4 @@
-# 💬 Shivam - Desi AI Bhai
+# 💬 Aapka AI - Desi AI Bhai
 
 A modern, responsive web chatbot powered by Google's Gemini AI with full desi vibe and Hinglish communication style. Built with Flask backend and beautiful HTML/CSS/JavaScript frontend.
 
@@ -164,10 +164,10 @@ Deploy anywhere Docker runs (AWS, Azure, GCP, etc.):
 
 ```bash
 # Build image
-docker build -t shivam-ai .
+docker build -t genai-ai .
 
 # Run container
-docker run -e GEMINI_API_KEY=your_key -p 5000:5000 shivam-ai
+docker run -e GEMINI_API_KEY=your_key -p 5000:5000 genai-ai
 ```
 
 Or use Docker Compose:
@@ -212,7 +212,7 @@ Send a message and get AI response
 
 ```json
 {
-  "message": "Yo Shivam, what's up?"
+  "message": "Yo Aapka AI, what's up?"
 }
 ```
 
@@ -234,14 +234,14 @@ Health check endpoint for monitoring
 ```json
 {
   "status": "ok",
-  "message": "Shivam is ready to chat!"
+  "message": "Aapka AI is ready to chat!"
 }
 ```
 
 ## 📁 Project Structure
 
 ```
-genz_ai/
+aapka_ai/
 ├── app.py                      # Flask backend (API)
 ├── requirements.txt            # Python dependencies
 ├── .env.example               # API key template
@@ -273,7 +273,7 @@ genz_ai/
 
 ### Change AI Personality
 
-Edit the `SHIVAM_SYSTEM_PROMPT` in `app.py` to customize how Shivam responds.
+Edit the `Aapka AI_SYSTEM_PROMPT` in `app.py` to customize how Aapka AI responds.
 
 ### Update UI Colors
 
@@ -332,7 +332,7 @@ python app.py
 
 1. **Get API key:** Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. **Install locally:** Run `start.bat` or `./start.sh`
-3. **Test it:** Chat with Shivam at http://localhost:5000
+3. **Test it:** Chat with Aapka AI at http://localhost:5000
 4. **Deploy:** Follow one of the deployment options
 5. **Share:** Send your live URL to friends!
 

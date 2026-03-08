@@ -4,36 +4,164 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Shiva — Research &amp; Study AI</title>
+  <title>Aapka AI — Research &amp; Study AI</title>
+  <meta name="description"
+    content="Aapka AI is your multilingual Indian AI study buddy that speaks your state's language. Ask anything — research, studies, or general doubts!" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="stylesheet" href="style.css?v=5" />
 </head>
 
 <body>
 
+  <!-- ═══ STATE SELECTOR OVERLAY (shown on first launch) ═══ -->
+  <div id="stateSelector" class="state-selector-overlay" style="display:none;">
+    <div class="state-selector-modal">
+      <div class="state-selector-header">
+        <div class="state-selector-icon">🇮🇳</div>
+        <h1 class="state-selector-title">Apna State Chuno!</h1>
+        <p class="state-selector-subtitle">Pick your state — Aapka AI will chat in your language 🗣️</p>
+      </div>
+      <div class="state-search-wrap">
+        <input type="text" id="stateSearch" class="state-search-input" placeholder="🔍  Search states..."
+          autocomplete="off" />
+      </div>
+      <div class="state-grid" id="stateGrid">
+        <!-- states populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LANGUAGE MODE SELECTOR (shown after state selection) ═══ -->
+  <div id="langModeSelector" class="lang-mode-overlay" style="display:none;">
+    <div class="lang-mode-modal">
+      <div class="lang-mode-header">
+        <div class="lang-mode-icon">🗣️</div>
+        <h2 class="lang-mode-title">Choose Your Vibe!</h2>
+        <p class="lang-mode-subtitle" id="langModeSubtitle">How should Aapka AI talk to you?</p>
+      </div>
+      <div class="lang-mode-options">
+        <button class="lang-mode-card" id="modeNativelish" data-mode="nativelish">
+          <div class="lang-mode-card-icon">🔀</div>
+          <div class="lang-mode-card-title">Nativelish</div>
+          <div class="lang-mode-card-desc" id="nativelishDesc">Mix of native script + English — like how you text your
+            friends!</div>
+          <div class="lang-mode-card-example" id="nativelishExample">"Machine Learning સમજાવ ને bhai, simple માં!"</div>
+        </button>
+        <button class="lang-mode-card" id="modeNative" data-mode="native">
+          <div class="lang-mode-card-icon">🏠</div>
+          <div class="lang-mode-card-title">Full Native</div>
+          <div class="lang-mode-card-desc" id="nativeDesc">100% in your native language and script</div>
+          <div class="lang-mode-card-example" id="nativeExample">"મશીન લર્નિંગ સમજાવ ને ભાઈ, સરળ ભાષામાં!"</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ EDUCATION LEVEL SELECTOR (shown after mode selection) ═══ -->
+  <div id="levelSelector" class="lang-mode-overlay" style="display:none;">
+    <div class="lang-mode-modal" style="max-width: 600px;">
+      <div class="lang-mode-header">
+        <div class="lang-mode-icon">🎓</div>
+        <h2 class="lang-mode-title">What's your level?</h2>
+        <p class="lang-mode-subtitle">This helps Aapka AI adjust its explanations</p>
+      </div>
+      <div class="lang-mode-options" style="grid-template-columns: repeat(3, 1fr);">
+        <button class="lang-mode-card level-card" data-level="school">
+          <div class="lang-mode-card-icon">🎒</div>
+          <div class="lang-mode-card-title">School</div>
+          <div class="lang-mode-card-desc">Simple & Easy to understand</div>
+        </button>
+        <button class="lang-mode-card level-card" data-level="college">
+          <div class="lang-mode-card-icon">📚</div>
+          <div class="lang-mode-card-title">College</div>
+          <div class="lang-mode-card-desc">Detailed & Academic concepts</div>
+        </button>
+        <button class="lang-mode-card level-card" data-level="professional">
+          <div class="lang-mode-card-icon">💼</div>
+          <div class="lang-mode-card-title">Professional</div>
+          <div class="lang-mode-card-desc">Technical & Direct answers</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══ SYSTEM SETUP LOADER (shown before chat) ═══ -->
+  <div id="setupLoader" class="setup-overlay" style="display:none;">
+    <div class="setup-modal">
+      <svg class="setup-spinner" viewBox="0 0 50 50">
+        <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+      </svg>
+      <h3 class="setup-title">Setting up Aapka AI...</h3>
+      <p class="setup-greeting" id="setupGreeting">नमस्ते</p>
+    </div>
+  </div>
+
+  <!-- ═══ SETTINGS MODAL ═══ -->
+  <div id="settingsOverlay" class="settings-overlay" style="display:none;">
+    <div class="settings-modal">
+      <div class="settings-header">
+        <span class="settings-title">⚙️ Settings</span>
+        <button id="settingsClose" class="settings-close-btn">✕</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-section">
+          <label class="settings-label">🗺️ Your State</label>
+          <p class="settings-hint">Aapka AI will chat in your state's local language</p>
+          <div class="settings-state-current" id="currentStateBadge">
+            <span class="settings-state-flag" id="currentStateFlag">🏳️</span>
+            <span class="settings-state-name" id="currentStateName">—</span>
+            <button class="settings-change-btn" id="changeStateBtn">Change</button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <label class="settings-label">🗣️ Language Mode</label>
+          <p class="settings-hint">Choose how Aapka AI mixes languages</p>
+          <div class="settings-mode-toggle">
+            <button class="mode-toggle-btn" id="settingsModeNativelish" data-mode="nativelish">
+              <span>🔀</span> Nativelish
+            </button>
+            <button class="mode-toggle-btn" id="settingsModeNative" data-mode="native">
+              <span>🏠</span> Full Native
+            </button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <label class="settings-label">🎓 What's your level?</label>
+          <p class="settings-hint">This helps Aapka AI adjust its explanations</p>
+          <select id="educationLevelSelect" class="settings-select">
+            <option value="school">🎒 School (Simple & Easy)</option>
+            <option value="college">📚 College (Detailed & Academic)</option>
+            <option value="professional">💼 Professional (Technical & Direct)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN APP ═══ -->
   <div class="app-wrapper">
     <header class="topbar">
       <button class="topbar-btn" id="sidebarToggle">☰</button>
-      <span class="topbar-title">Shiva</span>
-      <button class="topbar-btn" id="newChatBtn">＋</button>
+      <span class="topbar-title">Aapka AI</span>
+      <div class="topbar-right">
+        <button class="topbar-btn topbar-settings" id="settingsBtn" title="Settings">⚙</button>
+        <button class="topbar-btn" id="newChatBtn">＋</button>
+      </div>
     </header>
 
     <div class="messages-area" id="messagesContainer">
       <div class="welcome-screen" id="welcomeScreen">
-        <div class="welcome-logo">🤓</div>
-        <h1 class="welcome-title">Kem chho, yaar?</h1>
-        <p class="welcome-subtitle">Kuch bhi pooch — research, study, ya general doubts 😊</p>
-        <div class="suggestion-grid">
-          <button class="suggestion-card" data-prompt="What is machine learning and how does it work?"><span
-              class="card-icon">🧠</span><span class="card-text">Machine Learning explain kar</span></button>
-          <button class="suggestion-card" data-prompt="Explain the difference between RAM and ROM simply."><span
-              class="card-icon">💻</span><span class="card-text">RAM vs ROM — samjhav bhai</span></button>
-          <button class="suggestion-card" data-prompt="What are the best study techniques for students?"><span
-              class="card-icon">📚</span><span class="card-text">Best study techniques?</span></button>
-          <button class="suggestion-card" data-prompt="How does the internet work in simple terms?"><span
-              class="card-icon">🌐</span><span class="card-text">Internet kevi rite kaam kare?</span></button>
+        <img src="images/logo.png" class="welcome-logo" alt="Aapka AI Logo">
+        <h1 class="welcome-title" id="welcomeTitle">Hello, yaar!</h1>
+        <p class="welcome-subtitle" id="welcomeSubtitle">Kuch bhi pooch — research, study, ya general doubts 😊</p>
+        <div class="state-badge-welcome" id="welcomeStateBadge" style="display:none;">
+          <span id="welcomeStateLabel">—</span>
+        </div>
+        <div class="suggestion-grid" id="suggestionGrid">
+          <!-- populated by JS based on state -->
         </div>
       </div>
     </div>
@@ -41,7 +169,7 @@
     <div class="input-bar">
       <div class="input-wrapper">
         <form id="chatForm" class="input-form">
-          <textarea id="userInput" class="chat-input" placeholder="Shiva ne kuch poochho..." autocomplete="off"
+          <textarea id="userInput" class="chat-input" placeholder="Kuch bhi poochho..." autocomplete="off"
             rows="1"></textarea>
           <button type="submit" class="send-btn" id="sendButton">➤</button>
         </form>
@@ -50,7 +178,7 @@
     </div>
   </div>
 
-  <!-- SIDEBAR: uses display:none / display:flex (no CSS transform) -->
+  <!-- SIDEBAR -->
   <div id="sidebarOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:998;">
   </div>
   <div id="sidebar"
@@ -80,7 +208,7 @@
 
   <template id="aiBubbleTemplate">
     <div class="msg-row msg-row--ai">
-      <div class="ai-avatar">🤓</div>
+      <img src="images/logo.png" class="ai-avatar" alt="Aapka AI">
       <div class="msg-content">
         <div class="ai-text"></div>
         <div class="msg-actions hidden">
@@ -94,7 +222,7 @@
 
   <template id="loadingTemplate">
     <div class="msg-row msg-row--ai" id="loadingRow">
-      <div class="ai-avatar">🤓</div>
+      <img src="images/logo.png" class="ai-avatar" alt="Aapka AI">
       <div class="msg-content">
         <div class="typing-dots"><span></span><span></span><span></span></div>
       </div>
@@ -102,7 +230,7 @@
   </template>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="script.js?v=3"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 
 </html>
