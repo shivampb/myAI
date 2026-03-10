@@ -147,7 +147,7 @@ exports.handler = async (event) => {
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: "gemini-3-flash",
+            model: "gemini-3.1-flash-lite",
             systemInstruction: systemPrompt,
             generationConfig: {
                 maxOutputTokens: 2000,

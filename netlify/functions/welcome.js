@@ -99,7 +99,7 @@ Return ONLY valid JSON format like this, no markdown formatting blocks:
 }`;
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-3-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
 
         const result = await model.generateContent(prompt);
         let text = result.response.text();
