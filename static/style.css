@@ -1013,6 +1013,23 @@ body {
   border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ai-avatar.speaking {
+  animation: avatarSpeak 0.8s ease-in-out infinite alternate;
+  box-shadow: 0 0 20px var(--saffron-glow-strong);
+  border: 2px solid var(--saffron);
+}
+
+@keyframes avatarSpeak {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.15);
+  }
 }
 
 .msg-content {
@@ -1285,7 +1302,38 @@ body {
   color: var(--text-3);
 }
 
-/* ── Send button with tricolor gradient ── */
+/* ── Mic & Send button with tricolor gradient ── */
+.mic-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+  touch-action: manipulation;
+}
+
+.mic-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--saffron);
+  color: var(--saffron);
+  transform: scale(1.05);
+}
+
+.mic-btn.listening {
+  background: var(--saffron-glow);
+  border-color: var(--saffron);
+  color: var(--saffron);
+  animation: pulse 1.5s infinite;
+}
+
 .send-btn {
   width: 36px;
   height: 36px;

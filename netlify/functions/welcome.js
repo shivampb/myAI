@@ -71,7 +71,7 @@ exports.handler = async (event) => {
 
         const cfg = STATE_LANG_MAP[userState] || { lang: "Hindi", script: "Devanagari" };
 
-        const prompt = `You are generating localized UI text for an Indian student AI assistant.
+        const prompt = `You are generating localized UI text for 'Aapka AI', an AI companion designed to help adults and seniors (40-80 age group) in India with daily life, spirituality, health, and general knowledge.
 State: ${userState}
 Language: ${cfg.lang}
 Mode: ${userMode.toUpperCase()}
@@ -81,11 +81,11 @@ If mode is 'NATIVELISH', use a casual mix of ${cfg.lang} and English, and MUST W
 
 Generate the following UI elements:
 1. "greeting": A complete, friendly, and naturally localized casual greeting (e.g. 'Hello bhai', 'Namaste', 'Kem chho yaar', 'Enthokkeyundu viseesham'). Include natural colloquialisms if they fit the vibe.
-2. "subtitle": A natural, fully localized translation of "Ask anything — research, study, or general doubts 😊". Translate the entire meaning smoothly into the target language, avoiding awkward half-English phrases unless it perfectly suits NATIVELISH mode.
-3. "placeholder": A translation of "Ask Aapka AI anything..."
-4. "suggestions": An array of 4 UNIQUE, RANDOM, and DIVERSE student-related questions. Give completely different questions every time (e.g. mix Science, History, Coding, Space, Math, Current Affairs). Each object must have:
+2. "subtitle": A natural, fully localized translation of "Puchiye kuch bhi — swasthya, dharm, kheti, ya daily news 😊". Translate the entire meaning smoothly into the target language.
+3. "placeholder": A translation of "Aapka AI se kuch bhi puchiye..."
+4. "suggestions": An array of 4 UNIQUE, RANDOM, and DIVERSE questions suitable for adults and seniors. Give completely different questions every time (mix Health/Ayurveda, Spirituality/Stories, Agriculture/Gardening, Daily Tech Help like WhatsApp). Each object must have:
    - "icon": A single relevant emoji matching the question
-   - "text": A translated, student-friendly question (keep it short)
+   - "text": A translated, highly practical and respectful question (keep it short)
    - "prompt": The actual prompt that will be sent to the AI when clicked. MUST be fully translated into ${cfg.lang} matching the Mode rules (Native vs Nativelish) just like the text.
 
 Return ONLY valid JSON format like this, no markdown formatting blocks:

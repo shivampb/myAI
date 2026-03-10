@@ -6,6 +6,7 @@ import { initStateSelector, initModeSelector, initLevelSelector, initSettings } 
 import { showWelcome, updateUIForState, attachSuggestionCards } from './modules/welcome.js';
 import { addUserBubble, addAiTypewriter, addAiBubble, addError, removeLoading, sendMessage, attachCopy } from './modules/chat.js';
 import { attachTts, cancelTts } from './modules/tts.js';
+import { initVoiceInput, voiceState } from './modules/voice.js';
 
 // ── App State ──
 let chats = [];
@@ -21,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatForm = document.getElementById("chatForm");
     const userInput = document.getElementById("userInput");
     const sendButton = document.getElementById("sendButton");
+    const micButton = document.getElementById("micButton");
     const sidebarToggle = document.getElementById("sidebarToggle");
     const sidebar = document.getElementById("sidebar");
     const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -59,6 +61,11 @@ document.addEventListener("DOMContentLoaded", () => {
     userInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); chatForm.dispatchEvent(new Event("submit")); }
     });
+
+    // ── Init Voice Input ──
+    if (micButton) {
+        initVoiceInput(micButton, userInput);
+    }
 
     // ── Render helpers ──
     function refreshSidebar() {
@@ -219,6 +226,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const message = userInput.value.trim();
         if (!message || isLoading) return;
 
+        const isVoiceQuery = voiceState ? voiceState.isVoice : false;
+        if (voiceState) voiceState.isVoice = false; // immediately reset
+
         if (!activeChatId) {
             const chat = { id: genId(), title: message.slice(0, 40), messages: [] };
             chats.unshift(chat);
@@ -253,6 +263,13 @@ document.addEventListener("DOMContentLoaded", () => {
             chat.messages.push({ role: "ai", text: response });
             saveChats(chats);
             await addAiTypewriter(messagesContainer, aiBubbleTemplate, response);
+
+            if (isVoiceQuery) {
+                const rows = messagesContainer.querySelectorAll(".msg-row--ai");
+                const lastRow = rows[rows.length - 1];
+                const ttsBtn = lastRow?.querySelector(".tts-btn");
+                if (ttsBtn) ttsBtn.click();
+            }
         } catch (err) {
             console.error(err);
             removeLoading(messagesContainer);

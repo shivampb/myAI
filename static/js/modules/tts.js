@@ -46,6 +46,8 @@ export function attachTts(btn, text) {
         stopIcon.style.display = "none";
         label.textContent = "Listen";
         btn.classList.remove("tts-playing");
+        const avatar = btn.closest(".msg-row--ai")?.querySelector(".ai-avatar");
+        if (avatar) avatar.classList.remove("speaking");
     };
 
     async function start() {
@@ -59,6 +61,8 @@ export function attachTts(btn, text) {
             stopIcon.style.display = "inline";
             label.textContent = "Stop";
             btn.classList.add("tts-playing");
+            const avatar = btn.closest(".msg-row--ai")?.querySelector(".ai-avatar");
+            if (avatar) avatar.classList.add("speaking");
         };
         u.onend = reset;
         u.onerror = reset;

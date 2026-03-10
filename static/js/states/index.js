@@ -83,7 +83,7 @@ export function getWelcomeData() {
     catch (e) { return null; }
 }
 export function setWelcomeData(data) { localStorage.setItem("aapka_ai_welcome_data", JSON.stringify(data)); }
-export function getSelectedLevel() { return localStorage.getItem("aapka_ai_level") || "college"; }
+export function getSelectedLevel() { return localStorage.getItem("aapka_ai_level") || "simple"; }
 export function setSelectedLevel(l) { localStorage.setItem("aapka_ai_level", l); }
 export function getStateConfig(name) { return INDIAN_STATES.find(s => s.name === name) || null; }
 

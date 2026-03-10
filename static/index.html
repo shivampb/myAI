@@ -63,20 +63,20 @@
   <div id="levelSelector" class="lang-mode-overlay" style="display:none;">
     <div class="lang-mode-modal" style="max-width: 600px;">
       <div class="lang-mode-header">
-        <div class="lang-mode-icon">🎓</div>
-        <h2 class="lang-mode-title">What's your level?</h2>
+        <div class="lang-mode-icon">🎙️</div>
+        <h2 class="lang-mode-title">What's your preferred style?</h2>
         <p class="lang-mode-subtitle">This helps Aapka AI adjust its explanations</p>
       </div>
       <div class="lang-mode-options" style="grid-template-columns: repeat(3, 1fr);">
-        <button class="lang-mode-card level-card" data-level="school">
-          <div class="lang-mode-card-icon">🎒</div>
-          <div class="lang-mode-card-title">School</div>
+        <button class="lang-mode-card level-card" data-level="simple">
+          <div class="lang-mode-card-icon">🗣️</div>
+          <div class="lang-mode-card-title">Asaan Bhasha</div>
           <div class="lang-mode-card-desc">Simple & Easy to understand</div>
         </button>
-        <button class="lang-mode-card level-card" data-level="college">
+        <button class="lang-mode-card level-card" data-level="detailed">
           <div class="lang-mode-card-icon">📚</div>
-          <div class="lang-mode-card-title">College</div>
-          <div class="lang-mode-card-desc">Detailed & Academic concepts</div>
+          <div class="lang-mode-card-title">Detailed</div>
+          <div class="lang-mode-card-desc">In-depth & Insightful</div>
         </button>
         <button class="lang-mode-card level-card" data-level="professional">
           <div class="lang-mode-card-icon">💼</div>
@@ -129,11 +129,11 @@
           </div>
         </div>
         <div class="settings-section">
-          <label class="settings-label">🎓 What's your level?</label>
+          <label class="settings-label">🎙️ Aapka AI Response Style</label>
           <p class="settings-hint">This helps Aapka AI adjust its explanations</p>
           <select id="educationLevelSelect" class="settings-select">
-            <option value="school">🎒 School (Simple & Easy)</option>
-            <option value="college">📚 College (Detailed & Academic)</option>
+            <option value="simple">🗣️ Asaan Bhasha (Simple & Easy)</option>
+            <option value="detailed">📚 Detailed (In-depth Knowledge)</option>
             <option value="professional">💼 Professional (Technical & Direct)</option>
           </select>
         </div>
@@ -171,6 +171,7 @@
         <form id="chatForm" class="input-form">
           <textarea id="userInput" class="chat-input" placeholder="Kuch bhi poochho..." autocomplete="off"
             rows="1"></textarea>
+          <button type="button" class="mic-btn" id="micButton" title="Voice Input">🎙️</button>
           <button type="submit" class="send-btn" id="sendButton">➤</button>
         </form>
         <p class="input-hint">Enter to send · Shift+Enter for new line</p>

@@ -97,14 +97,14 @@ def build_system_prompt(state, mode="nativelish", level="college"):
 - Tone: Casual aur friendly rakh, par hamesha RESPECTFUL reh — jaise ek samajhdaar bada bhai ya mentor 😄
 - User ko respectfully address kar — jo bhi {state} mein natural lage (e.g., "bhai", "boss", "ji"). Jyada informal ya disrespectful words use mat kar. Write these in English alphabets too."""
 
-    if level == "school":
-        level_instruction = "EDUCATION LEVEL (SCHOOL): Explanations ekdum simple, easy-to-understand aur relatable honi chahiye. Examples real-life aur basic rakh. Jyada heavy technical jargon avoid kar."
+    if level == "simple":
+        level_instruction = "STYLE (SIMPLE & EASY): Explanations ekdum simple, easy-to-understand aur relatable honi chahiye. Examples daily life aur nature se related rakh. Heavy technical words bilkul avoid kar."
     elif level == "professional":
-        level_instruction = "EDUCATION LEVEL (PROFESSIONAL): Explanations technical, precise aur direct honi chahiye. Focus on mechanics, algorithms, business value, or mathematical depth. Address the user like a professional."
-    else:  # college
-        level_instruction = "EDUCATION LEVEL (COLLEGE): Explanations detailed, academic, yet accessible honi chahiye. Use good terminology but explain it clearly. In-depth understanding provide kar."
+        level_instruction = "STYLE (PROFESSIONAL & DIRECT): Explanations precise aur direct honi chahiye. Focus on facts, clear mechanics, and practical business or daily value. Address the user respectfully."
+    else:  # detailed
+        level_instruction = "STYLE (DETAILED KNOWLEDGE): Explanations detailed, insightful, aur thodi gehri honi chahiye. Har chiz ko achhe se samjha, chahe wo health, spirituality, ya general knowledge ho."
 
-    return f"""Tu Aapka AI hai — ek knowledgeable, helpful, aur thoda funny AI assistant jo studies, research, aur har tarah ke doubts mein madad karta hai.
+    return f"""Tu Aapka AI hai — ek wise, respectful, aur friendly AI companion jo India ke har umar ke logo (khas kar 40-80 age group) ko unke daily doubts, health, spirituality, news, agriculture, aur general gyan me madad karta hai. Bado se hamesha bohot samman (respect) se baat kar (jaise 'Aap', 'Ji').
 
 {lang_instruction}
 
@@ -142,7 +142,7 @@ def welcome():
 
         cfg = STATE_LANG_MAP.get(state, {"lang": "Hindi", "script": "Devanagari"})
         
-        prompt = f"""You are generating localized UI text for an Indian student AI assistant.
+        prompt = f"""You are generating localized UI text for 'Aapka AI', an AI companion designed to help adults and seniors (40-80 age group) in India with daily life, spirituality, health, and general knowledge.
 State: {state}
 Language: {cfg['lang']}
 Mode: {mode.upper()}
@@ -152,11 +152,11 @@ If mode is 'NATIVELISH', use a casual mix of {cfg['lang']} and English, and MUST
 
 Generate the following UI elements:
 1. "greeting": A complete, friendly, and naturally localized casual greeting (e.g. 'Hello bhai', 'Namaste', 'Kem chho yaar', 'Enthokkeyundu viseesham'). Include natural colloquialisms if they fit the vibe.
-2. "subtitle": A natural, fully localized translation of "Ask anything — research, study, or general doubts 😊". Translate the entire meaning smoothly into the target language, avoiding awkward half-English phrases unless it perfectly suits NATIVELISH mode.
-3. "placeholder": A translation of "Ask Aapka AI anything..."
-4. "suggestions": An array of 4 UNIQUE, RANDOM, and DIVERSE student-related questions. Give completely different questions every time (e.g. mix Science, History, Coding, Space, Math, Current Affairs). Each object must have:
+2. "subtitle": A natural, fully localized translation of "Puchiye kuch bhi — swasthya, dharm, kheti, ya daily news 😊". Translate the entire meaning smoothly into the target language.
+3. "placeholder": A translation of "Aapka AI se kuch bhi puchiye..."
+4. "suggestions": An array of 4 UNIQUE, RANDOM, and DIVERSE questions suitable for adults and seniors. Give completely different questions every time (mix Health/Ayurveda, Spirituality/Stories, Agriculture/Gardening, Daily Tech Help like WhatsApp). Each object must have:
    - "icon": A single relevant emoji matching the question
-   - "text": A translated, student-friendly question (keep it short)
+   - "text": A translated, highly practical and respectful question (keep it short)
    - "prompt": The actual prompt that will be sent to the AI when clicked. MUST be fully translated into {cfg['lang']} matching the Mode rules (Native vs Nativelish) just like the text.
 
 Return ONLY valid JSON format like this, no markdown formatting blocks:
