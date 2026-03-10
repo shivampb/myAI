@@ -26,7 +26,7 @@ generation_config = genai.types.GenerationConfig(
     temperature=0.7,
 )
 model = genai.GenerativeModel(
-    "gemini-3.1-flash-lite",
+    "gemini-3.1-flash-lite-preview",
     generation_config=generation_config,
 )
 
