@@ -41,9 +41,22 @@ const STATE_LANG_MAP = {
     "Puducherry": { lang: "Tamil", script: "Tamil (தமிழ்)" },
 };
 
+// Standard CORS headers for all responses
+const CORS_HEADERS = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 exports.handler = async (event) => {
+    // Handle CORS preflight
+    if (event.httpMethod === "OPTIONS") {
+        return { statusCode: 204, headers: CORS_HEADERS, body: "" };
+    }
+
     if (event.httpMethod !== "POST") {
-        return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
+        return { statusCode: 405, headers: CORS_HEADERS, body: JSON.stringify({ error: "Method not allowed" }) };
     }
 
     try {
@@ -86,7 +99,7 @@ Return ONLY valid JSON format like this, no markdown formatting blocks:
 }`;
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const result = await model.generateContent(prompt);
         let text = result.response.text();
@@ -95,20 +108,14 @@ Return ONLY valid JSON format like this, no markdown formatting blocks:
         const jsonResult = JSON.parse(text);
         return {
             statusCode: 200,
-            headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-            },
+            headers: CORS_HEADERS,
             body: JSON.stringify(jsonResult),
         };
     } catch (error) {
         console.error("Welcome API Error:", error);
         return {
             statusCode: 200,
-            headers: {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-            },
+            headers: CORS_HEADERS,
             body: JSON.stringify({
                 greeting: "Hello",
                 subtitle: "Ask anything — research, study, ya general doubts 😊",

@@ -1,3 +1,5 @@
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
 // ── Indian States → Language Config ──
 const STATE_LANG_MAP = {
     "Andhra Pradesh": { lang: "Telugu", script: "Telugu (తెలుగు)", mix: "Telugu-English (Tenglish)", greeting: "ఎలా ఉన్నారు", flavor: "Baaga cheppandi style" },
@@ -94,9 +96,22 @@ RESPONSE RULES:
 - Kabhi kabhi relevant emoji use kar 😊🔥💡 — par overdo mat kar.`;
 }
 
+// Standard CORS headers for all responses
+const CORS_HEADERS = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 exports.handler = async (event) => {
+    // Handle CORS preflight
+    if (event.httpMethod === "OPTIONS") {
+        return { statusCode: 204, headers: CORS_HEADERS, body: "" };
+    }
+
     if (event.httpMethod !== "POST") {
-        return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
+        return { statusCode: 405, headers: CORS_HEADERS, body: JSON.stringify({ error: "Method not allowed" }) };
     }
 
     try {
@@ -107,12 +122,12 @@ exports.handler = async (event) => {
         const chatHistory = history || [];
 
         if (!message || !message.trim()) {
-            return { statusCode: 400, body: JSON.stringify({ error: "Message cannot be empty" }) };
+            return { statusCode: 400, headers: CORS_HEADERS, body: JSON.stringify({ error: "Message cannot be empty" }) };
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return { statusCode: 500, body: JSON.stringify({ error: "API key not configured" }) };
+            return { statusCode: 500, headers: CORS_HEADERS, body: JSON.stringify({ error: "API key not configured" }) };
         }
 
         const systemPrompt = buildSystemPrompt(userState, userMode, userLevel);
@@ -129,43 +144,30 @@ exports.handler = async (event) => {
 
         const fullMessage = `${historyText}User: ${message.trim()}\n\nAapka AI:`;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-        const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                system_instruction: {
-                    parts: [{ text: systemPrompt }],
-                },
-                contents: [{ parts: [{ text: fullMessage }] }],
-                generationConfig: {
-                    maxOutputTokens: 2000,
-                    temperature: 0.7,
-                },
-            }),
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash",
+            systemInstruction: systemPrompt,
+            generationConfig: {
+                maxOutputTokens: 2000,
+                temperature: 0.7,
+            },
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            const errorMsg = errorData?.error?.message || "Gemini API error";
-            return { statusCode: response.status, body: JSON.stringify({ error: errorMsg }) };
-        }
-
-        const data = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        const result = await model.generateContent(fullMessage);
+        const text = result.response.text();
 
         if (text) {
             return {
                 statusCode: 200,
-                headers: { "Content-Type": "application/json" },
+                headers: CORS_HEADERS,
                 body: JSON.stringify({ success: true, response: text.trim() }),
             };
         } else {
-            return { statusCode: 500, body: JSON.stringify({ error: "Failed to get response from AI" }) };
+            return { statusCode: 500, headers: CORS_HEADERS, body: JSON.stringify({ error: "Failed to get response from AI" }) };
         }
     } catch (err) {
-        console.error("Error:", err);
-        return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+        console.error("Chat API Error:", err);
+        return { statusCode: 500, headers: CORS_HEADERS, body: JSON.stringify({ error: err.message || "Internal server error" }) };
     }
 };

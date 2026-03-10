@@ -76,7 +76,7 @@ export function addError(container, template, msg) {
 
 export function removeLoading(container) {
     const el = container.querySelector("#loadingRow");
-    if (el) el.closest(".msg-row")?.remove();
+    if (el) el.remove();
 }
 
 export async function sendMessage(message, history = []) {
