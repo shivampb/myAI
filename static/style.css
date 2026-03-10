@@ -60,6 +60,31 @@ body {
   color: var(--text-1);
   overflow: hidden;
   -webkit-text-size-adjust: 100%;
+  position: relative;
+}
+
+/* ── Premium Background with Indian Flag ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image: url('https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: saturate(0.8) contrast(1.1);
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  /* Heavy dark overlay with premium glassmorphism vibe */
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.95) 100%);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
 }
 
 /* ══════════════════════════════════
@@ -728,6 +753,7 @@ body {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  background: transparent;
 }
 
 /* ── Top bar ── */
@@ -736,10 +762,12 @@ body {
   align-items: center;
   gap: 0.6rem;
   padding: 0.5rem 0.75rem;
-  background: var(--surface);
+  background: rgba(10, 10, 10, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   flex-shrink: 0;
   position: relative;
-  border-bottom: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Tricolor underline on topbar */
@@ -815,7 +843,7 @@ body {
   flex-direction: column;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  background: var(--bg);
+  background: transparent;
 }
 
 .messages-area::-webkit-scrollbar {
@@ -892,8 +920,10 @@ body {
 }
 
 .suggestion-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(15, 15, 15, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: var(--radius);
   padding: 0.85rem;
   text-align: left;
@@ -972,8 +1002,10 @@ body {
 }
 
 .msg-bubble--user {
-  background: var(--user-bg);
-  border: 1px solid var(--border);
+  background: rgba(255, 153, 51, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 153, 51, 0.2);
   border-radius: 16px 16px 4px 16px;
   padding: 0.65rem 1rem;
   max-width: 80%;
@@ -981,6 +1013,7 @@ body {
   line-height: 1.55;
   color: var(--text-1);
   position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Saffron accent stripe on user messages */
@@ -1245,7 +1278,7 @@ body {
 /* ── Input ── */
 .input-bar {
   padding: 0.6rem 0.75rem 0.75rem;
-  background: var(--bg);
+  background: transparent;
   flex-shrink: 0;
   position: relative;
 }
@@ -1271,11 +1304,14 @@ body {
   display: flex;
   align-items: flex-end;
   gap: 0.5rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: rgba(10, 10, 10, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 0.5rem 0.5rem 0.5rem 0.9rem;
   transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .input-form:focus-within {

@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const userInput = document.getElementById("userInput");
     const sendButton = document.getElementById("sendButton");
     const micButton = document.getElementById("micButton");
+    const shareChatBtn = document.getElementById("shareChatBtn");
     const sidebarToggle = document.getElementById("sidebarToggle");
     const sidebar = document.getElementById("sidebar");
     const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -169,6 +170,66 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300);
     }
 
+    async function handleShareChat() {
+        const chat = chats.find(c => c.id === activeChatId);
+        if (!chat || chat.messages.length === 0) {
+            alert("No messages to share!");
+            return;
+        }
+
+        // Show loading state on button
+        const originalContent = shareChatBtn.innerHTML;
+        shareChatBtn.innerHTML = "⏳";
+        shareChatBtn.disabled = true;
+
+        try {
+            // 1. Generate a "snapshot" of the chat session
+            const snapshot = {
+                title: chat.title,
+                messages: chat.messages,
+                isVoice: chat.isVoice,
+                timestamp: new Date().toISOString()
+            };
+
+            // 2. Upload to the server to get a unique shareable ID
+            const res = await fetch("/api/share", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(snapshot)
+            });
+
+            const data = await res.json();
+            if (!data.success) throw new Error("Share failed");
+
+            // 3. Create the direct URL
+            const shareUrl = `${window.location.origin}/shared/${data.share_id}`;
+
+            // 4. Use native share OR fallback to clipboard
+            if (navigator.share) {
+                await navigator.share({
+                    title: `Aapka AI Chat: ${chat.title}`,
+                    text: `Check out this conversation with Aapka AI 🇮🇳`,
+                    url: shareUrl
+                });
+                shareChatBtn.innerHTML = originalContent;
+            } else {
+                await navigator.clipboard.writeText(shareUrl);
+                alert("Deep Link copied! You can now paste it in WhatsApp.");
+                shareChatBtn.innerHTML = "✅";
+                setTimeout(() => shareChatBtn.innerHTML = originalContent, 2000);
+            }
+        } catch (err) {
+            console.error("Share failed:", err);
+            alert("Sorry, could not generate a share link.");
+            shareChatBtn.innerHTML = "❌";
+            setTimeout(() => shareChatBtn.innerHTML = originalContent, 2000);
+        } finally {
+            shareChatBtn.disabled = false;
+        }
+    }
+
+    if (shareChatBtn) shareChatBtn.addEventListener("click", handleShareChat);
+
     // ── State selection callbacks ──
     const levelApi = initLevelSelector({
         levelSelector,
@@ -236,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (voiceState) voiceState.isVoice = false;
 
         if (!activeChatId) {
-            const chat = { id: genId(), title: message.slice(0, 40), messages: [] };
+            const chat = { id: genId(), title: message.slice(0, 40), messages: [], isVoice: isVoiceQuery };
             chats.unshift(chat);
             activeChatId = chat.id;
         }
@@ -246,6 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const chat = chats.find(c => c.id === activeChatId);
         if (chat.messages.length === 0) {
             chat.title = message.slice(0, 40) + (message.length > 40 ? "…" : "");
+            if (isVoiceQuery) chat.isVoice = true;
             refreshSidebar();
         }
 
@@ -307,6 +369,48 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ── Init ──
+    // Check if we are viewing a shared chat
+    const pathParts = window.location.pathname.split('/');
+    if (pathParts[1] === 'shared' && pathParts[2]) {
+        const shareId = pathParts[2];
+        const loadingRow = document.createElement('div');
+        loadingRow.style.cssText = "text-align:center; padding: 2rem; color: #888;";
+        loadingRow.innerHTML = "⌛ Loading shared conversation...";
+        messagesContainer.appendChild(loadingRow);
+
+        fetch(`/api/shared/${shareId}`)
+            .then(res => res.json())
+            .then(data => {
+                loadingRow.remove();
+                if (data.error) throw new Error("Not found");
+
+                // Set up a temporary active view
+                const sharedChat = {
+                    id: 'shared-' + shareId,
+                    title: `Shared: ${data.title}`,
+                    messages: data.messages,
+                    readOnly: true
+                };
+
+                // Inject into local state for rendering
+                activeChatId = sharedChat.id;
+                // Add to chats list ONLY if not already there (visual session)
+                if (!chats.find(c => c.id === sharedChat.id)) {
+                    chats.unshift(sharedChat);
+                }
+
+                renderChatMessages();
+                // Disable input for shared read-only chats
+                userInput.disabled = true;
+                userInput.placeholder = "Viewing a shared conversation";
+                sendButton.disabled = true;
+                micButton.disabled = true;
+            })
+            .catch(err => {
+                loadingRow.innerHTML = "❌ Failed to load shared chat.";
+            });
+    }
+
     const savedState = getSelectedState();
     if (!savedState) {
         showStateSelector();

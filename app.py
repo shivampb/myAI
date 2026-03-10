@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as genai
 import os
+import json
+import uuid
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -358,6 +360,50 @@ def generate_edge_tts():
 def health():
     """Health check endpoint"""
     return jsonify({"status": "ok", "message": "Aapka AI is ready to chat!"})
+
+
+# ── Share Chat Persistence ──
+SHARED_CHATS_DIR = "shared_chats"
+if not os.path.exists(SHARED_CHATS_DIR):
+    os.makedirs(SHARED_CHATS_DIR)
+
+@app.route("/api/share", methods=["POST"])
+def share_chat():
+    """Saves a chat snapshot and returns a unique ID"""
+    try:
+        chat_data = request.json
+        if not chat_data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        share_id = str(uuid.uuid4())[:8]
+        file_path = os.path.join(SHARED_CHATS_DIR, f"{share_id}.json")
+        
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(chat_data, f, ensure_ascii=False)
+            
+        return jsonify({"success": True, "share_id": share_id})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/shared/<share_id>")
+def view_shared_chat(share_id):
+    """View a shared chat snapshot"""
+    file_path = os.path.join(SHARED_CHATS_DIR, f"{share_id}.json")
+    if not os.path.exists(file_path):
+        return "Chat not found or link expired.", 404
+        
+    return index() # Serve the same frontend, but JS will handle the /shared/ URL
+
+@app.route("/api/shared/<share_id>")
+def get_shared_chat_data(share_id):
+    """API to fetch the shared chat data"""
+    file_path = os.path.join(SHARED_CHATS_DIR, f"{share_id}.json")
+    if not os.path.exists(file_path):
+        return jsonify({"error": "Not found"}), 404
+        
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return jsonify(data)
 
 
 if __name__ == "__main__":

@@ -145,8 +145,10 @@
   <div class="app-wrapper">
     <header class="topbar">
       <button class="topbar-btn" id="sidebarToggle">☰</button>
+
       <span class="topbar-title">Aapka AI</span>
       <div class="topbar-right">
+        <button class="topbar-btn" id="shareChatBtn" title="Share Chat">📤</button>
         <button class="topbar-btn topbar-settings" id="settingsBtn" title="Settings">⚙</button>
         <button class="topbar-btn" id="newChatBtn">＋</button>
       </div>
@@ -175,6 +177,33 @@
           <button type="submit" class="send-btn" id="sendButton">➤</button>
         </form>
         <p class="input-hint">Enter to send · Shift+Enter for new line</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ VOICE AGENT OVERLAY ═══ -->
+  <div id="voiceAgentOverlay" class="voice-agent-overlay" style="display:none;">
+    <div class="voice-agent-content">
+      <div class="voice-agent-header">
+        <button id="closeVoiceAgent" class="close-voice-btn">✕</button>
+      </div>
+      <div class="voice-visualizer" id="voiceVisualizer">
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+      </div>
+      <div class="voice-status" id="voiceAgentStatus">Connecting...</div>
+      <div class="voice-transcript-container">
+        <div class="voice-transcript" id="voiceTranscript">Say "Hello" to start chatting in real-time...</div>
+      </div>
+
+      <div class="voice-controls">
+        <button id="toggleMicAgent" class="voice-control-btn active">🎙️</button>
       </div>
     </div>
   </div>
