@@ -86,7 +86,7 @@ Generate the following UI elements:
 4. "suggestions": An array of 4 UNIQUE, RANDOM, and DIVERSE student-related questions. Give completely different questions every time (e.g. mix Science, History, Coding, Space, Math, Current Affairs). Each object must have:
    - "icon": A single relevant emoji matching the question
    - "text": A translated, student-friendly question (keep it short)
-   - "prompt": The actual English prompt that will be sent to the AI when clicked.
+   - "prompt": The actual prompt that will be sent to the AI when clicked. MUST be fully translated into ${cfg.lang} matching the Mode rules (Native vs Nativelish) just like the text.
 
 Return ONLY valid JSON format like this, no markdown formatting blocks:
 {
@@ -114,16 +114,9 @@ Return ONLY valid JSON format like this, no markdown formatting blocks:
     } catch (error) {
         console.error("Welcome API Error:", error);
         return {
-            statusCode: 200,
+            statusCode: 500,
             headers: CORS_HEADERS,
-            body: JSON.stringify({
-                greeting: "Hello",
-                subtitle: "Ask anything — research, study, ya general doubts 😊",
-                placeholder: "Ask Aapka AI anything...",
-                suggestions: [
-                    { icon: "🧠", text: "Machine Learning?", prompt: "Explain machine learning simply" }
-                ]
-            }),
+            body: JSON.stringify({ error: "Failed to generate welcome parameters" }),
         };
     }
 };

@@ -91,6 +91,7 @@ def build_system_prompt(state, mode="nativelish", level="college"):
         lang_instruction = f"""LANGUAGE & STYLE (NATIVELISH MODE):
 - User ne "{state}" select kiya hai — toh tu {cfg['mix']} mein baat kar. Primary language: {cfg['lang']}.
 - CRITICAL: {cfg['lang']} words MUST be written using ENGLISH ALPHABETS (Roman script / transliterated). DO NOT use the native {cfg['script']} script.
+- EVEN IF the user writes their question in {cfg['script']} script, you MUST reply in ENGLISH ALPHABETS ONLY! This is a strict constraint.
 - For example: write "namaste" NOT "नमस्ते", write "vanakkam" NOT "வணக்கம்", write "kem chho" NOT "કેમ છો", write "namaskara" NOT "ನಮಸ್ಕಾರ".
 - The result should be a natural mix of {cfg['lang']} (written in English alphabets) and English — like how educated bilingual people text their friends on WhatsApp.
 - Tone: Casual aur friendly rakh, par hamesha RESPECTFUL reh — jaise ek samajhdaar bada bhai ya mentor 😄
@@ -156,7 +157,7 @@ Generate the following UI elements:
 4. "suggestions": An array of 4 UNIQUE, RANDOM, and DIVERSE student-related questions. Give completely different questions every time (e.g. mix Science, History, Coding, Space, Math, Current Affairs). Each object must have:
    - "icon": A single relevant emoji matching the question
    - "text": A translated, student-friendly question (keep it short)
-   - "prompt": The actual English prompt that will be sent to the AI when clicked.
+   - "prompt": The actual prompt that will be sent to the AI when clicked. MUST be fully translated into {cfg['lang']} matching the Mode rules (Native vs Nativelish) just like the text.
 
 Return ONLY valid JSON format like this, no markdown formatting blocks:
 {{
@@ -178,14 +179,7 @@ Return ONLY valid JSON format like this, no markdown formatting blocks:
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return jsonify({
-            "greeting": "Hello", 
-            "subtitle": "Ask anything — research, study, ya general doubts 😊",
-            "placeholder": "Ask Aapka AI anything...",
-            "suggestions": [
-               {"icon": "🧠", "text": "Machine Learning?", "prompt": "Explain machine learning simply"}
-            ]
-        }), 200
+        return jsonify({"error": "Failed to generate welcome parameters"}), 500
 
 @app.route("/api/chat", methods=["POST"])
 def chat():

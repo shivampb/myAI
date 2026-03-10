@@ -17,7 +17,7 @@ export function showWelcome(container, welcomeData = null) {
     ws.className = "welcome-screen";
 
     const cardsHtml = cards.map(c =>
-        `<button class="suggestion-card" data-prompt="${escapeHtml(c.prompt)}"><span class="card-icon">${c.icon}</span><span class="card-text">${c.text}</span></button>`
+        `<button class="suggestion-card" data-prompt="${escapeHtml(c.text)}"><span class="card-icon">${c.icon}</span><span class="card-text">${c.text}</span></button>`
     ).join("");
     const badgeHtml = cfg ? `<div class="state-badge-welcome">${cfg.emoji} ${state}</div>` : "";
 

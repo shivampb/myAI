@@ -58,6 +58,7 @@ function buildSystemPrompt(state, mode = "nativelish", level = "college") {
         langInstruction = `LANGUAGE & STYLE (NATIVELISH MODE):
 - User ne "${state}" select kiya hai — toh tu ${cfg.mix} mein baat kar. Primary language: ${cfg.lang}.
 - CRITICAL: ${cfg.lang} words MUST be written using ENGLISH ALPHABETS (Roman script / transliterated). DO NOT use the native ${cfg.script} script.
+- EVEN IF the user writes their question in ${cfg.script} script, you MUST reply in ENGLISH ALPHABETS ONLY! This is a strict constraint.
 - For example: write "namaste" NOT "नमस्ते", write "vanakkam" NOT "வணக்கம்", write "kem chho" NOT "કેમ છો", write "namaskara" NOT "ನಮಸ್ಕಾರ".
 - The result should be a natural mix of ${cfg.lang} (written in English alphabets) and English — like how educated bilingual people text their friends on WhatsApp.
 - Tone: Casual aur friendly rakh, par hamesha RESPECTFUL reh — jaise ek samajhdaar bada bhai ya mentor 😄

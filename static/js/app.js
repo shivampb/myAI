@@ -113,50 +113,57 @@ document.addEventListener("DOMContentLoaded", () => {
         if (activeChatId) renderChatMessages(); else renderWelcome();
     }
 
+    async function fetchAndApplyWelcomeData() {
+        // Show setup loader
+        const setupLoader = document.getElementById("setupLoader");
+        const setupGreeting = document.getElementById("setupGreeting");
+
+        const state = getSelectedState();
+        const config = getStateConfig(state);
+        const mode = getSelectedMode();
+        // Default to Namaste if config lacks a greeting
+        setupGreeting.textContent = config ? config.greeting : "नमस्ते";
+
+        setupLoader.style.display = "flex";
+
+        // Start the fetching process AND wait a minimum of 2.5s
+        const fetchPromise = fetch("/api/welcome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ state, mode })
+        }).then(res => res.json()).catch(() => null);
+
+        const timerPromise = new Promise(res => setTimeout(res, 2500));
+
+        // Wait for BOTH the visual timer and the actual API call to finish
+        const [welcomeData] = await Promise.all([fetchPromise, timerPromise]);
+
+        if (welcomeData && !welcomeData.error) {
+            setWelcomeData(welcomeData);
+        } else {
+            // If failed, clear welcome data to force static fallback
+            localStorage.removeItem("aapka_ai_welcome_data");
+        }
+
+        setupLoader.style.animation = "modalFadeOut 0.3s forwards";
+        setTimeout(() => {
+            setupLoader.style.display = "none";
+            setupLoader.style.animation = ""; // reset
+
+            // Now fully finish state/mode init
+            updateUIForState(state, { userInput, currentStateName, currentStateFlag }, welcomeData || null);
+            renderWelcome();
+            userInput.focus();
+        }, 300);
+    }
+
     // ── State selection callbacks ──
     const levelApi = initLevelSelector({
         levelSelector,
         levelCards,
         onLevelSelected: async (level) => {
             setSelectedLevel(level);
-            // Show setup loader
-            const setupLoader = document.getElementById("setupLoader");
-            const setupGreeting = document.getElementById("setupGreeting");
-
-            const state = getSelectedState();
-            const config = getStateConfig(state);
-            const mode = getSelectedMode();
-            // Default to Namaste if config lacks a greeting
-            setupGreeting.textContent = config ? config.greeting : "नमस्ते";
-
-            setupLoader.style.display = "flex";
-
-            // Start the fetching process AND wait a minimum of 2.5s
-            const fetchPromise = fetch("/api/welcome", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ state, mode })
-            }).then(res => res.json()).catch(() => null);
-
-            const timerPromise = new Promise(res => setTimeout(res, 2500));
-
-            // Wait for BOTH the visual timer and the actual API call to finish
-            const [welcomeData] = await Promise.all([fetchPromise, timerPromise]);
-
-            if (welcomeData) {
-                setWelcomeData(welcomeData);
-            }
-
-            setupLoader.style.animation = "modalFadeOut 0.3s forwards";
-            setTimeout(() => {
-                setupLoader.style.display = "none";
-                setupLoader.style.animation = ""; // reset
-
-                // Now fully finish state/mode init
-                updateUIForState(state, { userInput, currentStateName, currentStateFlag }, welcomeData);
-                renderWelcome();
-                userInput.focus();
-            }, 300);
+            await fetchAndApplyWelcomeData();
         }
     });
 
@@ -193,10 +200,17 @@ document.addEventListener("DOMContentLoaded", () => {
         settingsBtn, settingsOverlay, settingsClose, changeStateBtn,
         currentStateName, currentStateFlag, showStateSelector,
         currentMode: getSelectedMode,
-        onModeChange: setSelectedMode,
+        onModeChange: async (mode) => {
+            setSelectedMode(mode);
+            settingsOverlay.style.display = "none";
+            await fetchAndApplyWelcomeData();
+        },
         educationLevelSelect,
         currentLevel: getSelectedLevel,
-        onLevelChange: setSelectedLevel
+        onLevelChange: async (level) => {
+            setSelectedLevel(level);
+            // Re-fetch chat config not necessary here, but we can update UI
+        }
     });
 
     // ── Form submit ──
