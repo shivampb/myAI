@@ -80,51 +80,41 @@ def build_system_prompt(state, mode="nativelish", level="college"):
 
     if mode == "native":
         lang_instruction = f"""LANGUAGE & STYLE (FULL {cfg['lang']} MODE):
-- User ne "{state}" select kiya hai aur FULL NATIVE mode chuna hai. 
+- User has selected "{state}".
 - You MUST respond ENTIRELY in {cfg['lang']} written in its NATIVE script ({cfg['script']}).
-- DO NOT use English words unless absolutely necessary for technical terms that have no translation. Even then, try to write the technical term in the {cfg['script']} script if possible.
+- DO NOT use English words unless absolutely necessary for technical terms that have no translation.
 - DO NOT transliterate. Use the actual {cfg['script']} characters.
-- Tone: Casual aur friendly rakh, par hamesha RESPECTFUL reh — jaise ek samajhdaar bada bhai ya mentor 😄. Par puri baat {cfg['lang']} ({cfg['script']} script) mein honi chahiye.
-- User ko respectfully address kar jo {state} mein natural lage (e.g., "bhai", "boss", "ji" in {cfg['script']}). Jyada informal ya disrespectful words use mat kar.
+- Tone: Highly PROFESSIONAL, FORMAL, and STRICTLY DIRECT. Do not be conversational.
+- DO NOT use casual greetings, filler words, emojis, or conversational wrappers. Give only the exact answer.
 - For example: write "नमस्ते" NOT "namaste", write "வணக்கம்" NOT "vanakkam"."""
     else:
         lang_instruction = f"""LANGUAGE & STYLE (NATIVELISH MODE):
-- User ne "{state}" select kiya hai — toh tu {cfg['mix']} mein baat kar. Primary language: {cfg['lang']}.
+- User has selected "{state}". Reply naturally mixing {cfg['lang']} and English.
 - CRITICAL: {cfg['lang']} words MUST be written using ENGLISH ALPHABETS (Roman script / transliterated). DO NOT use the native {cfg['script']} script.
-- EVEN IF the user writes their question in {cfg['script']} script, you MUST reply in ENGLISH ALPHABETS ONLY! This is a strict constraint.
-- For example: write "namaste" NOT "नमस्ते", write "vanakkam" NOT "வணக்கம்", write "kem chho" NOT "કેમ છો", write "namaskara" NOT "ನಮಸ್ಕಾರ".
-- The result should be a natural mix of {cfg['lang']} (written in English alphabets) and English — like how educated bilingual people text their friends on WhatsApp.
-- Tone: Casual aur friendly rakh, par hamesha RESPECTFUL reh — jaise ek samajhdaar bada bhai ya mentor 😄
-- User ko respectfully address kar — jo bhi {state} mein natural lage (e.g., "bhai", "boss", "ji"). Jyada informal ya disrespectful words use mat kar. Write these in English alphabets too."""
+- EVEN IF the user writes their question in {cfg['script']} script, you MUST reply in ENGLISH ALPHABETS ONLY!
+- Tone: Highly PROFESSIONAL, FORMAL, and STRICTLY DIRECT. Do not be conversational.
+- DO NOT use casual greetings, filler words, emojis, or conversational wrappers. Give only the exact answer."""
 
     if level == "simple":
-        level_instruction = "STYLE (SIMPLE & EASY): Explanations ekdum simple, easy-to-understand aur relatable honi chahiye. Examples daily life aur nature se related rakh. Heavy technical words bilkul avoid kar."
+        level_instruction = "STYLE (SIMPLE & EASY): Explanations must be technically simple and very easy to understand, but maintain a highly professional tone."
     elif level == "professional":
-        level_instruction = "STYLE (PROFESSIONAL & DIRECT): Explanations precise aur direct honi chahiye. Focus on facts, clear mechanics, and practical business or daily value. Address the user respectfully."
+        level_instruction = "STYLE (PROFESSIONAL & DIRECT): Explanations must be highly precise, strict, and direct. Focus purely on facts and formulas."
     else:  # detailed
-        level_instruction = "STYLE (DETAILED KNOWLEDGE): Explanations detailed, insightful, aur thodi gehri honi chahiye. Har chiz ko achhe se samjha, chahe wo health, spirituality, ya general knowledge ho."
+        level_instruction = "STYLE (DETAILED KNOWLEDGE): Explanations must be thoroughly detailed but strictly professional and academic in tone."
 
-    return f"""Tu Aapka AI hai — ek wise, respectful, aur friendly AI companion jo India ke har umar ke logo (khas kar 40-80 age group) ko unke daily doubts, health, spirituality, news, agriculture, aur general gyan me madad karta hai. Bado se hamesha bohot samman (respect) se baat kar (jaise 'Aap', 'Ji').
+    return f"""You are a strictly professional and formal AI assistant for users in India.
 
 {lang_instruction}
 
 {level_instruction}
 
-- Thoda humor rakh — light jokes, funny analogies, ya witty comments daal de beech mein, but keep it polite and respectful. Helpful hamesha pehle!
-- Sarcasm ya rudeness bilkul nahi — hamesha supportive reh.
-- Example greeting style: "{cfg['greeting']}" — ek {cfg['flavor']}.
-
 RESPONSE RULES:
-- Be COMPACT yet INSIGHTFUL — har sentence mein value honi chahiye, filler nahi.
-- Important points fully cover kar, par unnecessary detail mein mat jaa. Quality over quantity.
-- Simple questions: 3-5 tight sentences with real insight + ek chhota joke ya relatable comment.
-- Medium topics: Bullet points ya 2-4 short paragraphs — key points clearly cover kar.
-- Complex topics: Thorough but well-structured. Sections use kar agar helpful ho, par concise rakh.
-- Har point ek hi baar samjha, repeat mat kar.
-- Answer incomplete mat chhod — puri baat kar.
-- Filler phrases mat use kar jaise "Great question!", "Certainly!", "Of course!" — seedha answer se shuru kar.
-- Jab kuch pata na ho, honestly aur respectfully bol de.
-- Kabhi kabhi relevant emoji use kar 😊🔥💡 — par overdo mat kar."""
+- CRITICAL: ALWAYS answer the question DIRECTLY and IMMEDIATELY. 
+- NEVER start your response with ANY greetings, polite acknowledgments, conversational filler, or phrases like "Great question!", "Sure!", "Ji haan", "Haan bhai", "Zaroor", "Bilkul!", "Hello", "Namaste", "Kem cho", "It depends", etc.
+- NEVER end your response with conversational sign-offs, questions, or emojis.
+- IF THE USER ASKS A MATH QUESTION (e.g., "50 guniya 84"): GIVE ONLY THE FINAL NUMBER. DO NOT explain the math. DO NOT say "Here is the answer" or "The answer is". If the answer is 4200, output literally ONLY "4200".
+- Be strictly factual, zero-fluff, and completely void of personality. You are a tool, not a friend.
+- Do not use emojis anywhere, under any circumstances."""
 
 
 @app.route("/")
@@ -218,6 +208,149 @@ def chat():
 
     except Exception as e:
         print(f"Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/tts", methods=["POST"])
+def generate_tts():
+    """API endpoint to generate spoken audio using ElevenLabs"""
+    try:
+        data = request.json
+        text = data.get("text", "").strip()
+        if not text:
+            return jsonify({"error": "No text provided"}), 400
+
+        elevenlabs_key = os.getenv("ELEVENLABS_API_KEY")
+        if not elevenlabs_key:
+            return jsonify({"error": "ELEVENLABS_API_KEY not configured"}), 500
+
+        # We'll use 'Gaurav', an Indian English voice found in the library
+        voice_id = "SXuKWBhKoIoAHKlf6Gt3"
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        
+        headers = {
+            "Accept": "audio/mpeg",
+            "Content-Type": "application/json",
+            "xi-api-key": elevenlabs_key
+        }
+        
+        # eleven_multilingual_v2 handles Indian languages better
+        payload = {
+            "text": text,
+            "model_id": "eleven_multilingual_v2", 
+            "voice_settings": {
+                "stability": 0.5,
+                "similarity_boost": 0.75
+            }
+        }
+        
+        import requests
+        from flask import Response
+        
+        response = requests.post(url, json=payload, headers=headers, stream=True)
+        
+        if response.status_code != 200:
+            print(f"ElevenLabs error: {response.text}")
+            return jsonify({"error": "Failed to generate TTS"}), response.status_code
+            
+        return Response(response.iter_content(chunk_size=4096), content_type="audio/mpeg")
+        
+    except Exception as e:
+        print(f"TTS Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/stt", methods=["POST"])
+def generate_stt():
+    """API endpoint for Speech-to-Text using ElevenLabs"""
+    try:
+        if 'audio' not in request.files:
+            return jsonify({"error": "No audio file provided"}), 400
+            
+        audio_file = request.files['audio']
+        if audio_file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+
+        elevenlabs_key = os.getenv("ELEVENLABS_API_KEY")
+        if not elevenlabs_key:
+            return jsonify({"error": "ELEVENLABS_API_KEY not configured"}), 500
+
+        url = "https://api.elevenlabs.io/v1/speech-to-text"
+        headers = {
+            "xi-api-key": elevenlabs_key
+        }
+        
+        data = {
+            "model_id": "scribe_v1"
+        }
+        
+        files = {
+            "file": (audio_file.filename, audio_file.stream, audio_file.mimetype)
+        }
+        
+        import requests
+        response = requests.post(url, headers=headers, data=data, files=files)
+        
+        if response.status_code != 200:
+            print(f"ElevenLabs STT error: {response.text}")
+            return jsonify({"error": "Failed to process STT"}), response.status_code
+            
+        result = response.json()
+        return jsonify({"success": True, "text": result.get("text", "")})
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/tts/edge", methods=["POST"])
+def generate_edge_tts():
+    """API endpoint to generate spoken audio using edge-tts (Free & High Quality)"""
+    try:
+        data = request.json
+        text = data.get("text", "").strip()
+        state = data.get("state", "Gujarat").strip()
+        
+        if not text:
+            return jsonify({"error": "No text provided"}), 400
+
+        # Map state to best edge-tts voice
+        voice_map = {
+            "Gujarat": "gu-IN-NiranjanNeural",
+            "Maharashtra": "mr-IN-AarohiNeural",
+            "Tamil Nadu": "ta-IN-PallaviNeural",
+            "Karnataka": "kn-IN-GaganNeural",
+            "Kerala": "ml-IN-SobhanaNeural",
+            "West Bengal": "bn-IN-TanishaaNeural",
+            "Punjab": "pa-IN-OjasNeural",
+            "Andhra Pradesh": "te-IN-ShrutiNeural",
+            "Telangana": "te-IN-ShrutiNeural",
+        }
+        
+        # Default to a great Indian English / Hindi accent 
+        voice = voice_map.get(state, "en-IN-PrabhatNeural")
+
+        import edge_tts
+        import asyncio
+        import tempfile
+        import os
+        from flask import send_file
+        
+        # Create a temporary file for the mp3
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_audio:
+            temp_file_path = temp_audio.name
+            
+        async def run_tts():
+            communicate = edge_tts.Communicate(text, voice)
+            await communicate.save(temp_file_path)
+            
+        # Run async function in synchronous flask route
+        asyncio.run(run_tts())
+        
+        # We need to clean up the temp file after sending, Flask's send_file can do this in newer versions or via a tricky workaround.
+        # Just sending it for now.
+        return send_file(temp_file_path, mimetype="audio/mpeg", as_attachment=False)
+
+    except Exception as e:
+        print(f"Edge TTS Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 

@@ -1,4 +1,4 @@
-export const voiceState = { isVoice: false };
+export const voiceState = { isVoice: false, isTwoWay: false };
 
 export function initVoiceInput(micBtn, inputEl) {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -9,30 +9,36 @@ export function initVoiceInput(micBtn, inputEl) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
-    recognition.continuous = false;
-    recognition.interimResults = true;
+    recognition.continuous = false; // Stop naturally when the user stops talking
+    recognition.interimResults = true; // Stream the text directly into the box in real-time
 
     let isListening = false;
     let finalTranscript = '';
+    let manuallyStopped = false;
 
-    micBtn.addEventListener('click', () => {
+    micBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         if (isListening) {
+            manuallyStopped = true;
             recognition.stop();
+            voiceState.isTwoWay = false;
             return;
         }
 
-        // Set language based on selected state if possible, otherwise rely on browser default/Indian english
-        // Here we just use a generic config, maybe hi-IN as a broad default for broad Indian accents
-        recognition.lang = 'hi-IN'; // You could dynamically update this based on state selector
+        manuallyStopped = false;
+        // Native browser voice processing is great when set to a regional identifier
+        recognition.lang = 'hi-IN';
         recognition.start();
     });
 
     recognition.onstart = () => {
         isListening = true;
         voiceState.isVoice = true;
+        voiceState.isTwoWay = true;
         micBtn.classList.add('listening');
         inputEl.placeholder = 'Listening...';
-        finalTranscript = inputEl.value; // Store whatever is already typed
+        finalTranscript = '';
+        inputEl.value = '';
     };
 
     recognition.onresult = (event) => {
@@ -45,21 +51,34 @@ export function initVoiceInput(micBtn, inputEl) {
             }
         }
 
-        // Add a space if concatenating with existing text
+        // Show the real-time transcript looping into the input box
         let separator = (finalTranscript && !finalTranscript.endsWith(' ')) ? ' ' : '';
         inputEl.value = finalTranscript + separator + interimTranscript;
 
-        // Trigger auto-resize manually if defined
+        // Auto-resize the input area naturally
         inputEl.dispatchEvent(new Event('input'));
     };
 
     recognition.onerror = (event) => {
         console.error("Speech recognition error", event.error);
+        manuallyStopped = true;
+        voiceState.isTwoWay = false;
         stopListening();
     };
 
     recognition.onend = () => {
         stopListening();
+
+        // As soon as the browser detects the user is done talking, automatically submit what they said!
+        if (inputEl.value.trim() && voiceState.isVoice && !manuallyStopped) {
+            const form = inputEl.closest('form');
+            if (form) {
+                form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        } else {
+            // Nothing cleanly transcribed or we manually killed it
+            voiceState.isTwoWay = false;
+        }
     };
 
     function stopListening() {
@@ -69,6 +88,9 @@ export function initVoiceInput(micBtn, inputEl) {
     }
 
     inputEl.addEventListener('input', (e) => {
-        if (e.isTrusted) voiceState.isVoice = false;
+        if (e.isTrusted) {
+            voiceState.isVoice = false;
+            voiceState.isTwoWay = false;
+        }
     });
 }

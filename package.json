@@ -4,12 +4,27 @@
     "description": "Desi AI Study Buddy",
     "main": "app.py",
     "dependencies": {
-        "@google/generative-ai": "^0.21.0"
+        "@capacitor/core": "^8.2.0",
+        "@google/genai": "^1.44.0",
+        "@google/generative-ai": "^0.21.0",
+        "recordrtc": "^5.6.2",
+        "socket.io": "^4.8.3",
+        "socket.io-client": "^4.8.3",
+        "websocket": "^1.0.35"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [],
     "author": "",
-    "license": "ISC"
+    "license": "ISC",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/shivampb/myAI.git"
+    },
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/shivampb/myAI/issues"
+    },
+    "homepage": "https://github.com/shivampb/myAI#readme"
 }

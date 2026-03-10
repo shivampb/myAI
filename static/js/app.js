@@ -161,6 +161,11 @@ document.addEventListener("DOMContentLoaded", () => {
             updateUIForState(state, { userInput, currentStateName, currentStateFlag }, welcomeData || null);
             renderWelcome();
             userInput.focus();
+
+            // Auto start listening once setup is complete
+            if (micButton && voiceState && !voiceState.isVoice) {
+                setTimeout(() => micButton.click(), 500);
+            }
         }, 300);
     }
 
@@ -227,7 +232,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!message || isLoading) return;
 
         const isVoiceQuery = voiceState ? voiceState.isVoice : false;
-        if (voiceState) voiceState.isVoice = false; // immediately reset
+        // Don't reset voiceState.isTwoWay here; let it continue until user interrupts
+        if (voiceState) voiceState.isVoice = false;
 
         if (!activeChatId) {
             const chat = { id: genId(), title: message.slice(0, 40), messages: [] };
@@ -282,6 +288,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // ── Resuming STT for Two-Way Communication ──
+    window.addEventListener('tts-ended', (e) => {
+        // If the TTS was stopped manually, break the two-way loop
+        if (e.detail?.manuallyStopped) {
+            if (voiceState) voiceState.isTwoWay = false;
+            return;
+        }
+
+        // If we are still in two-way mode, restart speech recognition after a brief pause
+        if (voiceState && voiceState.isTwoWay && !isLoading) {
+            setTimeout(() => {
+                // Ensure the user hasn't typed anything or manually stopped in the delay
+                if (!voiceState.isTwoWay) return;
+                if (micButton) micButton.click();
+            }, 800);
+        }
+    });
+
     // ── Init ──
     const savedState = getSelectedState();
     if (!savedState) {
@@ -297,5 +321,11 @@ document.addEventListener("DOMContentLoaded", () => {
         renderWelcome();
     }
 
-    if (savedState && userInput) userInput.focus();
+    if (savedState && userInput) {
+        userInput.focus();
+        // Auto start listening on initial page load
+        if (micButton && voiceState && !voiceState.isVoice) {
+            setTimeout(() => micButton.click(), 1000);
+        }
+    }
 });
